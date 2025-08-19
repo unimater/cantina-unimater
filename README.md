@@ -1,13 +1,13 @@
-# 🍕 Sistema de Cantina Universitária
+# Sistema de Cantina Universitária
 
 Um sistema completo para gerenciamento da cantina universitária, desenvolvido como projeto acadêmico da disciplina de Projeto Extensionista
 
-## 📋 Links Importantes
+## Links Importantes
 
 - [Protótipo do Projeto](https://www.figma.com/design/JrVHydqtSYvE44BA9TMbNX/Unimater---Cantina?node-id=6201-1468&p=f&t=RlqeJgNQUli0ELwt-0)
 - [Diagrama de Banco de Dados](https://dbdocs.io/ranzaneduardo03/projeto_cantina?view=table_structure)
 
-## 📋 Sobre o Projeto
+## Sobre o Projeto
 
 Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 
@@ -19,7 +19,7 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - **Ponto de Venda**: Controle de vendas de produtos
 - **Fechamento de caixa**: Relatórios e resultados para fechamento do caixa
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 ### Backend
 
@@ -36,7 +36,7 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - **Tailwind CSS** - Framework de componentes/estilização
 - **Axios** - Cliente HTTP para comunicação com a API
 
-## 🚀 Funcionalidades
+## Funcionalidades
 
 ### 📦 Gestão de Produtos
 
@@ -45,30 +45,30 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - Controle de estoque
 - Categorização de produtos
 
-### 👥 Gestão de Usuários
+### Gestão de Usuários
 
 - Sistema de autenticação
 - Perfis de acesso (Admin, Funcionário)
 - Recuperação de senha
 - Controle de permissões
 
-### 💰 Gestão Financeira
+### Gestão Financeira
 
 - Registro de despesas operacionais
 - Controle de formas de pagamento
 - Relatórios financeiros básicos
 
-### 🏷️ Categorias
+### Categorias
 
 - Organização de produtos por categorias
 - Facilita a navegação e busca
 - Controle hierárquico de produtos
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 - O projeto conta com uma pasta ´documentation´ com os detalhes das estruturas
 
-## 🔧 Instalação e Configuração
+## Instalação e Configuração
 
 ### Pré-requisitos
 
@@ -80,16 +80,16 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 
 - Cada projeto contém o seu README com as instruções para rodar.
 
-## 👨‍🎓 Para os Desenvolvedores
+## Para os Desenvolvedores
 
-### 📚 Recursos de Estudo
+### Recursos de Estudo
 
 - [Documentação do NestJS](https://nestjs.com/)
 - [Documentação do React](https://reactjs.org/)
 - [Prisma Documentation](https://www.prisma.io/docs/orm)
 - [Material sobre REST APIs](https://restfulapi.net/)
 
-### 🤝 Contribuindo
+### Contribuindo
 
 1. Faça o clone do projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/...`)
@@ -97,7 +97,7 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 4. Push para a branch (`git push origin feature/...`)
 5. Abra um Pull Request
 
-## 👥 Equipe de Desenvolvimento
+## Equipe de Desenvolvimento
 
 - **Professor Orientador**: Felipe Cesar Maccari
 - **Desenvolvedores**:
