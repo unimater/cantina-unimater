@@ -2,6 +2,11 @@
 
 Um sistema completo para gerenciamento da cantina universitária, desenvolvido como projeto acadêmico da disciplina de Projeto Extensionista
 
+## 📋 Links Importantes
+
+- [Protótipo do Projeto](https://www.figma.com/design/JrVHydqtSYvE44BA9TMbNX/Unimater---Cantina?node-id=6201-1468&p=f&t=RlqeJgNQUli0ELwt-0)
+- [Diagrama de Banco de Dados](https://dbdocs.io/ranzaneduardo03/projeto_cantina?view=table_structure)
+
 ## 📋 Sobre o Projeto
 
 Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
