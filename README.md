@@ -89,6 +89,16 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - [Prisma Documentation](https://www.prisma.io/docs/orm)
 - [Material sobre REST APIs](https://restfulapi.net/)
 
+### Tipos de branchs
+
+- `docs`: apenas mudanças de documentação.
+- `feat`: uma nova funcionalidade.
+- `fix`: a correção de um bug.
+- `perf`: mudança de código focada em melhorar performance.
+- `refactor`: mudança de código que não adiciona uma funcionalidade e também não corrigi um bug.
+- `style`: mudanças no código que não afetam seu significado (espaço em branco, formatação, ponto e vírgula, etc).
+- `test`: adicionar ou corrigir testes.
+
 ### Contribuindo
 
 1. Faça o clone do projeto
@@ -100,8 +110,8 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 ## Equipe de Desenvolvimento
 
 - **Professor Orientador**: Felipe Cesar Maccari
-- **Desenvolvedores**:
+- **Desenvolvedores**: 
 
 ---
 
-**Desenvolvido com ❤️ por estudantes da Unimater**
+**Desenvolvido com ❤️ por estudantes da Unimater@2025**
