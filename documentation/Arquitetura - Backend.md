@@ -47,36 +47,38 @@
 
 ### Estrutura de Pastas
 
-- **src/**
-  - **produtos/**
-    - produtos.controller.ts
-    - produtos.service.ts
-    - produtos.module.ts
-    - **entities/**
-      - produto.entity.ts
-  - **categorias/**
-    - categorias.controller.ts
-    - categorias.service.ts
-    - categorias.module.ts
-    - **entities/**
-      - categoria.entity.ts
-  - **usuarios/**
-    - usuarios.controller.ts
-    - usuarios.service.ts
-    - usuarios.module.ts
-    - **entities/**
-      - usuario.entity.ts
-  - **despesas/**
-    - despesas.controller.ts
-    - despesas.service.ts
-    - despesas.module.ts
-    - **entities/**
-      - despesa.entity.ts
-  - **formas-pagamento/**
-    - formas-pagamento.controller.ts
-    - formas-pagamento.service.ts
-    - formas-pagamento.module.ts
-    - **entities/**
-      - forma-pagamento.entity.ts
-  - app.module.ts — módulo raiz que importa todos os outros módulos
-  - main.ts — ponto de entrada da aplicação
+```bash
+src/
+├── produtos/
+│   ├── produtos.controller.ts
+│   ├── produtos.service.ts
+│   ├── produtos.module.ts
+│   └── entities/
+│       └── produto.entity.ts
+├── categorias/
+│   ├── categorias.controller.ts
+│   ├── categorias.service.ts
+│   ├── categorias.module.ts
+│   └── entities/
+│       └── categoria.entity.ts
+├── usuarios/
+│   ├── usuarios.controller.ts
+│   ├── usuarios.service.ts
+│   ├── usuarios.module.ts
+│   └── entities/
+│       └── usuario.entity.ts
+├── despesas/
+│   ├── despesas.controller.ts
+│   ├── despesas.service.ts
+│   ├── despesas.module.ts
+│   └── entities/
+│       └── despesa.entity.ts
+├── formas-pagamento/
+│   ├── formas-pagamento.controller.ts
+│   ├── formas-pagamento.service.ts
+│   ├── formas-pagamento.module.ts
+│   └── entities/
+│       └── forma-pagamento.entity.ts
+├── app.module.ts       # módulo raiz que importa todos os outros
+└── main.ts             # ponto de entrada da aplicação
+```
