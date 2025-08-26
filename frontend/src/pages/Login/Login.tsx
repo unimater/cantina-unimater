@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -16,7 +15,9 @@ export function Login() {
     <Card className='w-full max-w-sm'>
       <CardHeader>
         <CardTitle className='text-center'>Login</CardTitle>
-        <CardDescription className='text-center'>Insira seu email e senha abaixo para entrar</CardDescription>
+        <CardDescription className='text-center'>
+          Insira seu email e senha abaixo para entrar
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form>
