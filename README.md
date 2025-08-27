@@ -2,12 +2,12 @@
 
 Um sistema completo para gerenciamento da cantina universitária, desenvolvido como projeto acadêmico da disciplina de Projeto Extensionista
 
-## Links Importantes
+## 🔗 Links Importantes
 
 - [Protótipo do Projeto](https://www.figma.com/design/JrVHydqtSYvE44BA9TMbNX/Unimater---Cantina?node-id=6201-1468&p=f&t=RlqeJgNQUli0ELwt-0)
 - [Diagrama de Banco de Dados](https://dbdocs.io/ranzaneduardo03/projeto_cantina?view=table_structure)
 
-## Sobre o Projeto
+## 📚 Sobre o Projeto
 
 Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 
@@ -19,7 +19,7 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - **Ponto de Venda**: Controle de vendas de produtos
 - **Fechamento de caixa**: Relatórios e resultados para fechamento do caixa
 
-## Tecnologias Utilizadas
+## 🛠 Tecnologias Utilizadas
 
 ### Backend
 
@@ -36,7 +36,7 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - **Tailwind CSS** - Framework de componentes/estilização
 - **Axios** - Cliente HTTP para comunicação com a API
 
-## Funcionalidades
+## 🚀 Funcionalidades
 
 ### 📦 Gestão de Produtos
 
@@ -45,51 +45,61 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 - Controle de estoque
 - Categorização de produtos
 
-### Gestão de Usuários
+### 👤 Gestão de Usuários
 
 - Sistema de autenticação
 - Perfis de acesso (Admin, Funcionário)
 - Recuperação de senha
 - Controle de permissões
 
-### Gestão Financeira
+### 🏦 Gestão Financeira
 
 - Registro de despesas operacionais
 - Controle de formas de pagamento
 - Relatórios financeiros básicos
 
-### Categorias
+### 📂 Categorias
 
 - Organização de produtos por categorias
 - Facilita a navegação e busca
 - Controle hierárquico de produtos
 
-## Estrutura do Projeto
+## 📂 Estrutura do Projeto
 
 - O projeto conta com uma pasta ´documentation´ com os detalhes das estruturas
 
-## Instalação e Configuração
+## ⚙️ Instalação e Configuração
 
-### Pré-requisitos
+### 📦 Pré-requisitos
 
 - Node.js (versão 22 ou superior)
 - Docker
 - Git
 
-### Como rodar os projetos?
+### 🚀 Como rodar os projetos?
 
 - Cada projeto contém o seu README com as instruções para rodar.
 
-## Para os Desenvolvedores
+## 👨 Para os Desenvolvedores
 
-### Recursos de Estudo
+### 📚 Recursos de Estudo
 
 - [Documentação do NestJS](https://nestjs.com/)
 - [Documentação do React](https://reactjs.org/)
 - [Prisma Documentation](https://www.prisma.io/docs/orm)
 - [Material sobre REST APIs](https://restfulapi.net/)
 
-### Contribuindo
+### 🚀 Tipos de branchs
+
+- `docs`: apenas mudanças de documentação.
+- `feat`: uma nova funcionalidade.
+- `fix`: a correção de um bug.
+- `perf`: mudança de código focada em melhorar performance.
+- `refactor`: mudança de código que não adiciona uma funcionalidade e também não corrigi um bug.
+- `style`: mudanças no código que não afetam seu significado (espaço em branco, formatação, ponto e vírgula, etc).
+- `test`: adicionar ou corrigir testes.
+
+### 🙌 Contribuindo
 
 1. Faça o clone do projeto
 2. Crie uma branch para sua feature (`git checkout -b feature/...`)
@@ -97,11 +107,19 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 4. Push para a branch (`git push origin feature/...`)
 5. Abra um Pull Request
 
-## Equipe de Desenvolvimento
+## 👥 Equipe de Desenvolvimento
 
 - **Professor Orientador**: Felipe Cesar Maccari
-- **Desenvolvedores**:
+
+## 👥 Contribuidores
+
+<a href="https://github.com/felipemaccari">
+  <img src="https://avatars.githubusercontent.com/u/7975533?v=4" width="50" height="50" style="border-radius:50%;" />
+</a>
+<a href="https://github.com/arthurlunkes">
+  <img src="https://avatars.githubusercontent.com/u/90714332?v=4" width="50" height="50" style="border-radius:50%;" />
+</a>
 
 ---
 
-**Desenvolvido com ❤️ por estudantes da Unimater**
+**Desenvolvido com ❤️ por estudantes da Unimater@2025**

@@ -61,51 +61,53 @@ O sistema é dividido em módulos principais:
 
 A estrutura de pastas segue a organização por **responsabilidade**, facilitando manutenção e escalabilidade.
 
-- **src/**
-  - **api/**
-    - api.js → configuração central da API
-  - **services/** → funções para consumo da API
-    - produtosService.js
-    - categoriasService.js
-    - usuariosService.js
-    - despesasService.js
-    - formasPagamentoService.js
-  - **pages/** → páginas principais de cada recurso
-    - **Produtos/**
-      - ListarProdutos.jsx
-      - CriarProduto.jsx
-      - EditarProduto.jsx
-      - DetalhesProduto.jsx
-    - **Categorias/**
-      - ListarCategorias.jsx
-      - CriarCategoria.jsx
-      - EditarCategoria.jsx
-      - DetalhesCategoria.jsx
-    - **Usuarios/**
-      - ListarUsuarios.jsx
-      - CriarUsuario.jsx
-      - EditarUsuario.jsx
-      - DetalhesUsuario.jsx
-    - **Despesas/**
-      - ListarDespesas.jsx
-      - CriarDespesa.jsx
-      - EditarDespesa.jsx
-      - DetalhesDespesa.jsx
-    - **FormasPagamento/**
-      - ListarFormasPagamento.jsx
-      - CriarFormaPagamento.jsx
-      - EditarFormaPagamento.jsx
-      - DetalhesFormaPagamento.jsx
-  - **components/** → componentes reutilizáveis
-    - ProdutoCard.jsx
-    - CategoriaCard.jsx
-    - UsuarioCard.jsx
-    - DespesaCard.jsx
-    - FormaPagamentoCard.jsx
-    - FormInput.jsx
-  - App.jsx → componente raiz
-  - index.js → ponto de entrada
-  - routes.js → definição das rotas
+```bash
+src/
+├── api/
+│   └── api.ts                  # configuração central da API
+├── services/                   # funções para consumo da API
+│   ├── produtosService.ts
+│   ├── categoriasService.ts
+│   ├── usuariosService.ts
+│   ├── despesasService.ts
+│   └── formasPagamentoService.ts
+├── pages/                      # páginas principais de cada recurso
+│   ├── Produtos/
+│   │   ├── ListarProdutos.tsx
+│   │   ├── CriarProduto.tsx
+│   │   ├── EditarProduto.tsx
+│   │   └── DetalhesProduto.tsx
+│   ├── Categorias/
+│   │   ├── ListarCategorias.tsx
+│   │   ├── CriarCategoria.tsx
+│   │   ├── EditarCategoria.tsx
+│   │   └── DetalhesCategoria.tsx
+│   ├── Usuarios/
+│   │   ├── ListarUsuarios.tsx
+│   │   ├── CriarUsuario.tsx
+│   │   ├── EditarUsuario.tsx
+│   │   └── DetalhesUsuario.tsx
+│   ├── Despesas/
+│   │   ├── ListarDespesas.tsx
+│   │   ├── CriarDespesa.tsx
+│   │   ├── EditarDespesa.tsx
+│   │   └── DetalhesDespesa.tsx
+│   └── FormasPagamento/
+│       ├── ListarFormasPagamento.tsx
+│       ├── CriarFormaPagamento.tsx
+│       ├── EditarFormaPagamento.tsx
+│       └── DetalhesFormaPagamento.tsx
+├── components/                 # componentes reutilizáveis
+│   ├── ProdutoCard.tsx
+│   ├── CategoriaCard.tsx
+│   ├── UsuarioCard.tsx
+│   ├── DespesaCard.tsx
+│   ├── FormaPagamentoCard.tsx
+│   └── FormInput.tsx
+├── App.tsx                     # componente raiz
+├── index.ts                    # ponto de entrada
+└── routes.ts                   # definição das rotas
+```
 
 ---
 
