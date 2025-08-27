@@ -110,7 +110,15 @@ Este sistema foi desenvolvido oferecendo funcionalidades essenciais como:
 ## 👥 Equipe de Desenvolvimento
 
 - **Professor Orientador**: Felipe Cesar Maccari
-- **Desenvolvedores**:
+
+## 👥 Contribuidores
+
+<a href="https://github.com/felipemaccari">
+  <img src="https://avatars.githubusercontent.com/u/7975533?v=4" width="50" height="50" style="border-radius:50%;" />
+</a>
+<a href="https://github.com/arthurlunkes">
+  <img src="https://avatars.githubusercontent.com/u/90714332?v=4" width="50" height="50" style="border-radius:50%;" />
+</a>
 
 ---
 
