@@ -12,28 +12,22 @@ export class UsersService {
       where: { username: userDto.username.trim() }
     });
 
-    if (usernameExists) {
-      throw new ConflictException('O nome de usuário já está em uso por outro usuário, verifique!');
-    }
+    if (usernameExists) throw new ConflictException('O nome de usuário já está em uso por outro usuário, verifique!');
 
-    const userWithSameEmail = await this.prismaService.user.findMany({
-      where: { email: userDto.email }
+    const userWithSameEmail = await this.prismaService.user.findFirst({
+      where: { email: userDto.email?.trim() }
     });
 
-    if (userWithSameEmail) {
-      throw new ConflictException('O e-mail já está em uso por outro usuário, verifique!');
-    }
-
-    const hashedPassword = await hash(userDto.password, 10);
+    if (userWithSameEmail) throw new ConflictException('O e-mail já está em uso por outro usuário, verifique!');
 
     return this.prismaService.user.create({
       data: {
-        cpf: userDto.cpf,
-        name: userDto.name,
-        username: userDto.username,
-        password: hashedPassword,
-        email: userDto.email,
-        phone: userDto.phone,
+        cpf: userDto.cpf.trim(),
+        name: userDto.name.trim(),
+        username: userDto.username.trim(),
+        password: await hash(userDto.password, 10),
+        email: userDto.email?.trim() ?? null,
+        phone: userDto.phone?.trim() ?? null,
         active: userDto.active ?? true
       }
     });
@@ -48,25 +42,55 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.prismaService.user.findUnique({
-      where: { id }
-    });
-    if (!user) throw new NotFoundException('Usuário não encontrado');
+    const user = await this.findUser(id);
     return user;
   }
 
   async update(id: string, userDto: UserDto) {
-    userDto.password = await hash(userDto.password, 10);
+    await this.findUser(id);
+    
+    const usernameExists = await this.prismaService.user.findFirst({
+      where: { 
+        username: userDto.username.trim(),
+        not: { id }
+      }
+    });
+
+    if (usernameExists) throw new ConflictException('O nome de usuário já está em uso por outro usuário, verifique!');
+
+    const userWithSameEmail = await this.prismaService.user.findFirst({
+      where: { 
+        email: userDto.email?.trim(),
+        not: { id } 
+      }
+    });
+
+    if (userWithSameEmail) throw new ConflictException('O e-mail já está em uso por outro usuário, verifique!');
 
     return this.prismaService.user.update({
       where: { id },
-      data: userDto,
+      data: {
+        cpf: userDto.cpf.trim(),
+        name: userDto.name.trim(),
+        username: userDto.username.trim(),
+        password: await hash(userDto.password, 10),
+        email: userDto.email?.trim() ?? null,
+        phone: userDto.phone?.trim() ?? null,
+        active: userDto.active ?? true
+      }
     });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    await this.findUser(id);
     return this.prismaService.user.delete({ 
       where: { id: id.toString() } 
     });
+  }
+
+  private async findUser(id: string) {
+    const user = await this.prismaService.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+    return user;
   }
 }
