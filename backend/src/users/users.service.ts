@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'bcrypt';
@@ -13,7 +13,7 @@ export class UsersService {
     });
 
     if (usernameExists) {
-      throw new Error('O nome de usuário já está em uso por outro usuário, verifique!');
+      throw new ConflictException('O nome de usuário já está em uso por outro usuário, verifique!');
     }
 
     const userWithSameEmail = await this.prismaService.user.findMany({
@@ -21,7 +21,7 @@ export class UsersService {
     });
 
     if (userWithSameEmail) {
-      throw new Error('O e-mail já está em uso por outro usuário, verifique!');
+      throw new ConflictException('O e-mail já está em uso por outro usuário, verifique!');
     }
 
     const hashedPassword = await hash(userDto.password, 10);
@@ -51,7 +51,7 @@ export class UsersService {
     const user = await this.prismaService.user.findUnique({
       where: { id }
     });
-    if (!user) throw new Error('Usuário não encontrado');
+    if (!user) throw new NotFoundException('Usuário não encontrado');
     return user;
   }
 
