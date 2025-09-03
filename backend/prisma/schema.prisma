@@ -13,3 +13,16 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Despesa {
+  id String @id @default(cuid())
+  descricao      String     @unique                                                     
+  data           DateTime                                    
+  valor          Decimal               
+  fornecedor     String?                   
+  observacoes    String?       
+
+  createdAt DateTime @default(now()) @map("created_at")       
+  updatedAt DateTime? @updatedAt @map("updated_at")                                  
+
+}
