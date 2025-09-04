@@ -3,7 +3,7 @@ services:
     container_name: unimater-cantina-postgres
     image: postgres
     ports:
-      - '5432:5432'
+      - '5433:5432'
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=12344321
