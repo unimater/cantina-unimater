@@ -5,11 +5,43 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
+
+model Produto {
+    id          String    @id @default(cuid())
+    descricao   String
+    valor       Decimal
+    situacao    Boolean
+    imagem      String?
+
+    categoria   Categoria @relation(fields: [categoriaId], references: [id])  
+    categoriaId String    @map("categoria_id") 
+    
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @updatedAt @map("updated_at")
+}
+
+model Categoria {
+    id        String        @id @default(cuid())
+    descricao String
+    tipo      TipoCategoria
+    situacao  Boolean
+
+    produtos  Produto[]
+
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+}
+
+enum TipoCategoria {
+    PRODUTO
+    DESPESA
+}
+
