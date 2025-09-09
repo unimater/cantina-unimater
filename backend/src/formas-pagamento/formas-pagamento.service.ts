@@ -7,12 +7,15 @@ import { PrismaService } from 'src/prisma/prisma-service';
 export class FormasPagamentoService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(createFormasPagamentoDto: CreateFormasPagamentoDto) {
-    await this.prismaService.formasPagamento.create({
-      data: {
-        name: createFormasPagamentoDto.name,
-        status: createFormasPagamentoDto.status,
-      },
+   async create(createFormasPagamentoDto: CreateFormasPagamentoDto) {
+    const { name, status } = createFormasPagamentoDto;
+
+    if (!name) {
+      throw new HttpException('O campo "name" é obrigatório', 400);
+    }
+
+    return this.prismaService.formasPagamento.create({
+      data: { name, status },
     });
   }
 
@@ -31,27 +34,27 @@ export class FormasPagamentoService {
     }
   }
 
-  async update(id: string, updateFormasPagamentoDto: UpdateFormasPagamentoDto) {
-    await this.prismaService.formasPagamento.update({
+async update(id: string, updateFormasPagamentoDto: UpdateFormasPagamentoDto) {
+    const { name, status } = updateFormasPagamentoDto;
+
+    if (!name) {
+      throw new HttpException('O campo "name" é obrigatório', 400);
+    }
+    
+    await this.findOne(id);
+
+    return this.prismaService.formasPagamento.update({
       where: { id },
-      data: {
-        name: updateFormasPagamentoDto.name,
-        status: updateFormasPagamentoDto.status,
-      },
+      data: { name, status },
     });
   }
 
-  async remove(id: string) {
-    const retorno = await this.prismaService.formasPagamento.findUnique({
-      where: { id }
-    })
 
-    if (!retorno) {
-      throw new HttpException('Forma de pagamento não encontrada', 404);
-    } else {
-      const retorno = await this.prismaService.formasPagamento.delete({
+  async remove(id: string) {
+    await this.findOne(id);
+
+    await this.prismaService.formasPagamento.delete({
         where: { id },
       });
-    }
   }
 }
