@@ -50,7 +50,7 @@ export class DespesasService {
     } catch (error) {
       if (error.code === 'P2002') {
         throw new BadRequestException(
-          'Não foi possível salvar o registro! Já existe uma despesa com a mesma descrição.'
+          'Não foi possível salvar o registro! Já existe uma despesa com a mesma descrição.',
         );
       }
       throw error;
@@ -58,20 +58,37 @@ export class DespesasService {
   }
 
   async update(id: string, updateDespesaDto: UpdateDespesaDto) {
-    if (updateDespesaDto.data && new Date(updateDespesaDto.data) > new Date()) {
-      throw new BadRequestException('Não é permitido informar uma data futura.');
+    // valida data somente se enviada
+    if (updateDespesaDto.data) {
+      const dataDespesa = new Date(updateDespesaDto.data);
+      if (dataDespesa > new Date()) {
+        throw new BadRequestException('Não é permitido informar uma data futura.');
+      }
     }
 
     try {
+      // constrói objeto de atualização apenas com campos enviados
+      const updateData: any = {};
+
+      if (updateDespesaDto.descricao !== undefined) {
+        updateData.descricao = updateDespesaDto.descricao;
+      }
+      if (updateDespesaDto.data !== undefined) {
+        updateData.data = new Date(updateDespesaDto.data);
+      }
+      if (updateDespesaDto.valor !== undefined) {
+        updateData.valor = updateDespesaDto.valor;
+      }
+      if (updateDespesaDto.fornecedor !== undefined) {
+        updateData.fornecedor = updateDespesaDto.fornecedor;
+      }
+      if (updateDespesaDto.observacoes !== undefined) {
+        updateData.observacoes = updateDespesaDto.observacoes;
+      }
+
       const despesa = await this.prisma.despesa.update({
         where: { id },
-        data: {
-          descricao: updateDespesaDto.descricao,
-          data: updateDespesaDto.data ? new Date(updateDespesaDto.data) : undefined,
-          valor: updateDespesaDto.valor,
-          fornecedor: updateDespesaDto.fornecedor,
-          observacoes: updateDespesaDto.observacoes,
-        },
+        data: updateData,
       });
 
       return {
@@ -84,7 +101,7 @@ export class DespesasService {
       }
       if (error.code === 'P2002') {
         throw new BadRequestException(
-          'Já existe uma despesa com a mesma descrição.'
+          'Não foi possível salvar o registro! Já existe uma despesa com a mesma descrição, verifique!',
         );
       }
       throw error;
