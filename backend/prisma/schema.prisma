@@ -1,15 +1,75 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Produto {
+    id          String    @id @default(cuid())
+    descricao   String
+    valor       Decimal
+    situacao    Boolean
+    imagem      String?
+
+    categoria   Categoria @relation(fields: [categoriaId], references: [id])  
+    categoriaId String    @map("categoria_id") 
+    
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @updatedAt @map("updated_at")
+}
+
+model Categoria {
+    id        String        @id @default(cuid())
+    descricao String
+    tipo      TipoCategoria
+    situacao  Boolean
+
+    produtos  Produto[]
+
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime? @updatedAt @map("updated_at")
+}
+
+enum TipoCategoria {
+    PRODUTO
+    DESPESA
+}
+
+model Despesa {
+  id             String     @id @default(cuid())
+  descricao      String     @unique                                                     
+  data           DateTime                                    
+  valor          Decimal               
+  fornecedor     String?                   
+  observacoes    String?       
+
+  createdAt DateTime  @default(now()) @map("created_at")       
+  updatedAt DateTime? @updatedAt      @map("updated_at")                                  
+}
+
+model User {
+  id           String       @id @default(cuid())
+  cpf          String       @unique @db.VarChar(20)
+  name         String       @db.VarChar(200)
+  username     String       @unique @db.VarChar(100) 
+  password     String       @db.VarChar(200)
+  email        String?      @db.VarChar(200)
+  phone        String?      @db.VarChar(20)
+  active       Boolean      @default(true)
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
+}
+
+model formasPagamento {
+  id           String       @id @default(cuid())
+  name         String
+  status       Boolean      @default(true)
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
 }
