@@ -13,3 +13,12 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model formasPagamento {
+  id                String       @id @default(cuid())
+  name              String
+  status           Boolean   @default(true)
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime?  @updatedAt
+}
