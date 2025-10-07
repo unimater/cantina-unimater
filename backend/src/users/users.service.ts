@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UserDto } from './dto/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { hash } from 'bcrypt';
@@ -11,22 +16,28 @@ export class UsersService {
     const validatedData = this.validateUserDto(userDto);
 
     const usernameExists = await this.prismaService.user.findFirst({
-      where: { username: validatedData.username }
+      where: { username: validatedData.username },
     });
 
-    if (usernameExists) throw new ConflictException('O nome de usuário já está em uso por outro usuário, verifique!');
+    if (usernameExists)
+      throw new ConflictException(
+        'O nome de usuário já está em uso por outro usuário, verifique!',
+      );
 
     const userWithSameEmail = await this.prismaService.user.findFirst({
-      where: { email: validatedData.email }
+      where: { email: validatedData.email },
     });
 
-    if (userWithSameEmail) throw new ConflictException('O e-mail já está em uso por outro usuário, verifique!');
+    if (userWithSameEmail)
+      throw new ConflictException(
+        'O e-mail já está em uso por outro usuário, verifique!',
+      );
 
     return this.prismaService.user.create({
       data: {
         ...validatedData,
-        password: await hash(validatedData.password, 10)
-      }
+        password: await hash(validatedData.password, 10),
+      },
     });
   }
 
@@ -34,7 +45,7 @@ export class UsersService {
     return this.prismaService.user.findMany({
       where: search ? { name: { contains: search, mode: 'insensitive' } } : {},
       skip,
-      take
+      take,
     });
   }
 
@@ -47,31 +58,37 @@ export class UsersService {
     await this.findUser(id);
 
     const validatedData = this.validateUserDto(userDto, true);
-    
+
     if (validatedData.username) {
       const usernameExists = await this.prismaService.user.findFirst({
         where: {
           username: validatedData.username,
-          NOT: { id }
-        }
+          NOT: { id },
+        },
       });
 
-      if (usernameExists) throw new ConflictException('O nome de usuário já está em uso por outro usuário, verifique!');
+      if (usernameExists)
+        throw new ConflictException(
+          'O nome de usuário já está em uso por outro usuário, verifique!',
+        );
     }
 
     if (validatedData.email) {
       const userWithSameEmail = await this.prismaService.user.findFirst({
         where: {
           email: validatedData.email,
-          NOT: { id }
-        }
+          NOT: { id },
+        },
       });
 
-      if (userWithSameEmail) throw new ConflictException('O e-mail já está em uso por outro usuário, verifique!');
+      if (userWithSameEmail)
+        throw new ConflictException(
+          'O e-mail já está em uso por outro usuário, verifique!',
+        );
     }
 
     const dataToUpdate: any = {
-      ...validatedData
+      ...validatedData,
     };
 
     if (validatedData.password) {
@@ -82,14 +99,14 @@ export class UsersService {
 
     return this.prismaService.user.update({
       where: { id },
-      data: dataToUpdate
+      data: dataToUpdate,
     });
   }
 
   async remove(id: string) {
     await this.findUser(id);
-    return this.prismaService.user.delete({ 
-      where: { id: id.toString() } 
+    return this.prismaService.user.delete({
+      where: { id: id.toString() },
     });
   }
 
@@ -135,7 +152,7 @@ export class UsersService {
       password: trimmedPassword,
       email: userDto.email?.trim() ?? null,
       phone: userDto.phone?.trim() ?? null,
-      active: userDto.active ?? true
+      active: userDto.active ?? true,
     };
   }
 }
