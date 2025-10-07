@@ -1,8 +1,10 @@
-import { Route, Routes, Navigate } from 'react-router';
+import { Route, Routes } from 'react-router';
 import { Login } from '../pages/Login/Login';
 import UsuariosPage from '@/app/usuario/page';
-import { PublicRoute } from '@/components/PublicRoute';
+import { Dashboard } from '@/pages/Dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { PublicRoute } from '@/components/PublicRoute';
+import { MainLayout } from '@/components/MainLayout';
 
 function App() {
   return (
@@ -15,23 +17,24 @@ function App() {
           </PublicRoute>
         }
       />
-      <Route
-        path='/usuarios'
-        element={
-          <ProtectedRoute>
-            <UsuariosPage />
-          </ProtectedRoute>
-        }
-      />
+
       <Route
         path='/'
         element={
-          <Navigate
-            to='/usuarios'
-            replace
-          />
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
         }
-      />
+      >
+        <Route
+          index
+          element={<Dashboard />}
+        />
+        <Route
+          path='usuarios'
+          element={<UsuariosPage />}
+        />
+      </Route>
     </Routes>
   );
 }
