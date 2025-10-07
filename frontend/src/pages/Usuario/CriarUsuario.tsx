@@ -1,21 +1,29 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { <label htmlFor=""></label> } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@components/ui/form";import { useState } from "react";
-import { Usuario } from "@/type/Usuario";
-import { toast } from "@/components/ui/sonner";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { Switch } from '@/components/ui/switch';
+import { usuarioSchema } from '@/lib/UsuarioSchema';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import type { Usuario } from '@/type/Usuario';
 
 type FormValues = z.infer<typeof usuarioSchema>;
 
@@ -28,39 +36,50 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(UsuarioSchema),
-    defaultValues: { situacao: true },
+  const form = useForm({
+    resolver: zodResolver(usuarioSchema),
+    defaultValues: {
+      situacao: true,
+      nome: '',
+      usuario: '',
+      senha: '',
+      confirmarSenha: '',
+      email: '',
+      telefone: '',
+    },
   });
 
   const campos = form.watch();
 
-  // Detecta alterações (exceto situação)
-  useState(() => {
-    const { situacao, ...outros } = campos;
-    const tem = Object.values(outros).some((v) => v);
+  useEffect(() => {
+    const { ...outros } = campos;
+    const tem = Object.values(outros).some(v => v);
     setTemAlteracao(tem);
-  });
+  }, [campos]);
 
   const onSubmit = (data: FormValues) => {
     const nomeNormalizado = (str: string) =>
-      str.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      str
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
     const nomeDuplicado = usuariosExistentes.some(
-      (u) => nomeNormalizado(u.nome) === nomeNormalizado(data.nome)
+      u => nomeNormalizado(u.nome) === nomeNormalizado(data.nome)
     );
 
     if (nomeDuplicado) {
-      toast.error("Não foi possível salvar o registro!", {
-        description: "Já existe um usuário com a mesma descrição. Verifique!",
+      toast.error('Não foi possível salvar o registro!', {
+        description: 'Já existe um usuário com a mesma descrição. Verifique!',
       });
       return;
     }
 
-    const loginDuplicado = usuariosExistentes.some((u) => u.usuario === data.usuario);
+    const loginDuplicado = usuariosExistentes.some(u => u.usuario === data.usuario);
     if (loginDuplicado) {
-      toast.error("Não foi possível salvar o registro!", {
-        description: "O nome de usuário já está em uso por outro usuário. Verifique!",
+      toast.error('Não foi possível salvar o registro!', {
+        description: 'O nome de usuário já está em uso por outro usuário. Verifique!',
       });
       return;
     }
@@ -76,8 +95,8 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
     };
 
     onUsuarioCriado(novoUsuario);
-    toast.success("Sucesso!", {
-      description: "O usuário foi incluído com sucesso.",
+    toast.success('Sucesso!', {
+      description: 'O usuário foi incluído com sucesso.',
     });
     form.reset();
     setOpen(false);
@@ -86,9 +105,9 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
   return (
     <Dialog
       open={open}
-      onOpenChange={(isOpen) => {
+      onOpenChange={isOpen => {
         if (!isOpen && temAlteracao) {
-          if (confirm("Você possui alterações não salvas. Deseja realmente sair?")) {
+          if (confirm('Você possui alterações não salvas. Deseja realmente sair?')) {
             setOpen(false);
             form.reset();
           }
@@ -100,33 +119,38 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
       <DialogTrigger asChild>
         <Button>Novo Usuário</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
+      <DialogContent className='max-h-screen max-w-2xl overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Cadastrar Usuário</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Card: Identificação */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg">Identificação</h3>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='space-y-6'
+          >
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Identificação</h3>
               <FormField
                 control={form.control}
-                name="nome"
+                name='nome'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nome *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Digite o nome completo" {...field} />
+                      <Input
+                        placeholder='Digite o nome completo'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <FormLabel>Situação</FormLabel>
                 <FormField
                   control={form.control}
-                  name="situacao"
+                  name='situacao'
                   render={({ field }) => (
                     <FormControl>
                       <Switch
@@ -139,30 +163,38 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
               </div>
             </div>
 
-            {/* Card: Contato */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg">Contato</h3>
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Contato</h3>
               <FormField
                 control={form.control}
-                name="email"
+                name='email'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="exemplo@faculdade.edu" {...field} />
+                      <Input
+                        type='email'
+                        placeholder='exemplo@faculdade.edu'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
-                name="telefone"
+                name='telefone'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Telefone</FormLabel>
                     <FormControl>
-                      <Input placeholder="(11) 91234-5678" maxLength={15} {...field} />
+                      <Input
+                        placeholder='(11) 91234-5678'
+                        maxLength={15}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,17 +202,20 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
               />
             </div>
 
-            {/* Card: Acesso */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg">Acesso</h3>
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Acesso</h3>
               <FormField
                 control={form.control}
-                name="usuario"
+                name='usuario'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Usuário *</FormLabel>
                     <FormControl>
-                      <Input placeholder="ex: ana.silva" maxLength={20} {...field} />
+                      <Input
+                        placeholder='ex: ana.silva'
+                        maxLength={20}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,25 +223,34 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
               />
               <FormField
                 control={form.control}
-                name="senha"
+                name='senha'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Senha *</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input
+                        type='password'
+                        placeholder='••••••••'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
-                name="confirmarSenha"
+                name='confirmarSenha'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Confirmação de Senha *</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Repita a senha" {...field} />
+                      <Input
+                        type='password'
+                        placeholder='Repita a senha'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -214,12 +258,20 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className='flex justify-end gap-2 pt-4'>
               <DialogClose asChild>
-                <Button type="button" variant="outline">Cancelar</Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                >
+                  Cancelar
+                </Button>
               </DialogClose>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Salvando..." : "Salvar"}
+              <Button
+                type='submit'
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
           </form>

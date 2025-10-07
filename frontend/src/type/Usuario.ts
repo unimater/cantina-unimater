@@ -1,4 +1,4 @@
-export type Usuario = {
+export interface Usuario {
   id: number;
   nome: string;
   situacao: boolean;
@@ -6,4 +6,4 @@ export type Usuario = {
   telefone?: string;
   usuario: string;
   senha: string;
-};
+}

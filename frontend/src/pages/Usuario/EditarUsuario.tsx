@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -6,17 +6,24 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
-import { Usuario } from "../../type/Usuario";
-import { toast } from "@/components/ui/sonner";
+} from '@/components/ui/dialog';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { usuarioSchema } from '@/lib/UsuarioSchema';
+import type { Usuario } from '@/type/Usuario';
 
 type FormValues = z.infer<typeof usuarioSchema>;
 
@@ -26,49 +33,61 @@ interface EditarUsuarioProps {
   usuariosExistentes: Usuario[];
 }
 
-const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualizado, usuariosExistentes }) => {
+const EditarUsuario: React.FC<EditarUsuarioProps> = ({
+  usuario,
+  onUsuarioAtualizado,
+  usuariosExistentes,
+}) => {
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
 
-  const form = useForm<FormValues>({
+  const form = useForm({
     resolver: zodResolver(usuarioSchema),
     defaultValues: {
-      ...usuario,
-      senha: "",
-      confirmarSenha: "",
+      nome: usuario.nome || '',
+      situacao: usuario.situacao ?? true,
+      email: usuario.email || '',
+      telefone: usuario.telefone || '',
+      usuario: usuario.usuario || '',
+      senha: '',
+      confirmarSenha: '',
     },
   });
 
   const campos = form.watch();
 
-  useState(() => {
-    const { situacao, ...outros } = campos;
-    const tem = Object.values(outros).some((v) => v);
+  useEffect(() => {
+    const { ...outros } = campos;
+    const tem = Object.values(outros).some(v => v);
     setTemAlteracao(tem);
-  });
+  }, [campos]);
 
   const onSubmit = (data: FormValues) => {
     const nomeNormalizado = (str: string) =>
-      str.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      str
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
     const nomeDuplicado = usuariosExistentes
-      .filter((u) => u.id !== usuario.id)
-      .some((u) => nomeNormalizado(u.nome) === nomeNormalizado(data.nome));
+      .filter(u => u.id !== usuario.id)
+      .some(u => nomeNormalizado(u.nome) === nomeNormalizado(data.nome));
 
     if (nomeDuplicado) {
-      toast.error("Não foi possível salvar o registro!", {
-        description: "Já existe um usuário com a mesma descrição. Verifique!",
+      toast.error('Não foi possível salvar o registro!', {
+        description: 'Já existe um usuário com a mesma descrição. Verifique!',
       });
       return;
     }
 
     const loginDuplicado = usuariosExistentes
-      .filter((u) => u.id !== usuario.id)
-      .some((u) => u.usuario === data.usuario);
+      .filter(u => u.id !== usuario.id)
+      .some(u => u.usuario === data.usuario);
 
     if (loginDuplicado) {
-      toast.error("Não foi possível salvar o registro!", {
-        description: "O nome de usuário já está em uso por outro usuário. Verifique!",
+      toast.error('Não foi possível salvar o registro!', {
+        description: 'O nome de usuário já está em uso por outro usuário. Verifique!',
       });
       return;
     }
@@ -84,8 +103,8 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
     };
 
     onUsuarioAtualizado(usuarioAtualizado);
-    toast.success("Sucesso!", {
-      description: "O usuário foi atualizado com sucesso.",
+    toast.success('Sucesso!', {
+      description: 'O usuário foi atualizado com sucesso.',
     });
     setOpen(false);
   };
@@ -93,9 +112,9 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
   return (
     <Dialog
       open={open}
-      onOpenChange={(isOpen) => {
+      onOpenChange={isOpen => {
         if (!isOpen && temAlteracao) {
-          if (confirm("Você possui alterações não salvas. Deseja realmente sair?")) {
+          if (confirm('Você possui alterações não salvas. Deseja realmente sair?')) {
             setOpen(false);
             form.reset();
           }
@@ -105,21 +124,28 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">Editar</Button>
+        <Button
+          variant='outline'
+          size='sm'
+        >
+          Editar
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
+      <DialogContent className='max-h-screen max-w-2xl overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Card: Identificação */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg">Identificação</h3>
-              <p className="text-sm text-muted-foreground">ID: {usuario.id}</p>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='space-y-6'
+          >
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Identificação</h3>
+              <p className='text-muted-foreground text-sm'>ID: {usuario.id}</p>
               <FormField
                 control={form.control}
-                name="nome"
+                name='nome'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nome *</FormLabel>
@@ -130,11 +156,11 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
                   </FormItem>
                 )}
               />
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <FormLabel>Situação</FormLabel>
                 <FormField
                   control={form.control}
-                  name="situacao"
+                  name='situacao'
                   render={({ field }) => (
                     <FormControl>
                       <Switch
@@ -147,17 +173,19 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
               </div>
             </div>
 
-            {/* Card: Contato */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg">Contato</h3>
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Contato</h3>
               <FormField
                 control={form.control}
-                name="email"
+                name='email'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" {...field} />
+                      <Input
+                        type='email'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,12 +193,16 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
               />
               <FormField
                 control={form.control}
-                name="telefone"
+                name='telefone'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Telefone</FormLabel>
                     <FormControl>
-                      <Input placeholder="(11) 91234-5678" maxLength={15} {...field} />
+                      <Input
+                        placeholder='(11) 91234-5678'
+                        maxLength={15}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,17 +210,19 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
               />
             </div>
 
-            {/* Card: Acesso */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <h3 className="font-semibold text-lg">Acesso</h3>
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Acesso</h3>
               <FormField
                 control={form.control}
-                name="usuario"
+                name='usuario'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Usuário *</FormLabel>
                     <FormControl>
-                      <Input maxLength={20} {...field} />
+                      <Input
+                        maxLength={20}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -196,12 +230,16 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
               />
               <FormField
                 control={form.control}
-                name="senha"
+                name='senha'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nova Senha (opcional)</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Deixe em branco para manter" {...field} />
+                      <Input
+                        type='password'
+                        placeholder='Deixe em branco para manter'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,12 +247,16 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
               />
               <FormField
                 control={form.control}
-                name="confirmarSenha"
+                name='confirmarSenha'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Confirmação de Senha</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Repita a nova senha" {...field} />
+                      <Input
+                        type='password'
+                        placeholder='Repita a nova senha'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -222,12 +264,20 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({ usuario, onUsuarioAtualiz
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className='flex justify-end gap-2 pt-4'>
               <DialogClose asChild>
-                <Button type="button" variant="outline">Cancelar</Button>
+                <Button
+                  type='button'
+                  variant='outline'
+                >
+                  Cancelar
+                </Button>
               </DialogClose>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Atualizando..." : "Atualizar"}
+              <Button
+                type='submit'
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? 'Atualizando...' : 'Atualizar'}
               </Button>
             </div>
           </form>
