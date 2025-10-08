@@ -1,10 +1,10 @@
 import { Route, Routes } from 'react-router';
 import { Login } from '../pages/Login/Login';
-import UsuariosPage from '@/app/usuario/page';
 import { Dashboard } from '@/pages/Dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
+import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
 
 function App() {
   return (
@@ -32,7 +32,7 @@ function App() {
         />
         <Route
           path='usuarios'
-          element={<UsuariosPage />}
+          element={<ListarUsuarios />}
         />
       </Route>
     </Routes>
