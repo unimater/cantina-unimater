@@ -5,6 +5,7 @@ import { Dashboard } from '@/pages/Dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
+import ListarProdutos from '@/pages/Produto/ListarProduto';
 
 function App() {
   return (
@@ -33,6 +34,10 @@ function App() {
         <Route
           path='usuarios'
           element={<UsuariosPage />}
+        />
+        <Route
+          path='produtos'
+          element={<ListarProdutos />}
         />
       </Route>
     </Routes>
