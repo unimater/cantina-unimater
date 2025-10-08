@@ -70,9 +70,7 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({ onProdutoCriado, produtosEx
   };
 
   return (
-    <DialogTrigger asChild>
-      <Button>Novo Produto</Button>
-    </DialogTrigger>
+    <Button>Novo Produto</Button>
   );
 };
 
