@@ -20,10 +20,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
+import { NumericFormat } from 'react-number-format';
+import { PencilLine } from 'lucide-react';
 
 type FormValues = z.infer<typeof produtoSchema>;
 
@@ -39,45 +41,140 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
   produtosExistentes,
 }) => {
   const [open, setOpen] = useState(false);
-  const [temAlteracao, setTemAlteracao] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const form = useForm({
+  const form = useForm<FormValues>({
     resolver: zodResolver(produtoSchema),
     defaultValues: {
-      situacao: produto.situacao ?? true,
+      nome: produto.descricao,
+      valor: produto.valor,
+      situacao: produto.situacao,
     },
   });
 
-  const campos = form.watch();
-
-  useEffect(() => {
-    const { ...outros } = campos;
-    const tem = Object.values(outros).some(v => v);
-    setTemAlteracao(tem);
-  }, [campos]);
-
   const onSubmit = (data: FormValues) => {
+    const duplicado = produtosExistentes.some(
+      (p) =>
+        p.descricao.trim().toLowerCase() === data.nome.trim().toLowerCase() &&
+        p.id !== produto.id
+    );
+
+    if (duplicado) {
+      toast.error('Já existe um produto com esse nome!');
+      return;
+    }
 
     const produtoAtualizado: Produto = {
       ...produto,
-      descricao: data.nome,
+      descricao: data.nome.trim(),
+      valor: data.valor,
       situacao: data.situacao,
+      updatedAt: new Date().toISOString(),
     };
 
     onProdutoAtualizado(produtoAtualizado);
-    toast.success('Sucesso!', {
-      description: 'O produto foi atualizado com sucesso.',
-    });
+    toast.success('Produto atualizado com sucesso!');
     setOpen(false);
   };
 
   return (
-    <Button
-      variant='outline'
-      size='sm'
+    <Dialog
+      open={open}
+      onOpenChange={(state) => {
+        setOpen(state);
+        if (state) setTimeout(() => inputRef.current?.focus(), 100);
+      }}
     >
-      Editar
-    </Button>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 px-3 text-sm rounded-md align-middle inline-flex items-center justify-center hover:bg-gray-100"
+        >
+          <PencilLine size={14} className="mr-1" /> Editar
+        </Button>
+      </DialogTrigger>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar Produto</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Nome */}
+            <FormField
+              control={form.control}
+              name="nome"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descrição</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Ex: Pão de Queijo"
+                      ref={(el) => {
+                        field.ref(el);
+                        inputRef.current = el;
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Valor */}
+            <FormField
+              control={form.control}
+              name="valor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor</FormLabel>
+                  <FormControl>
+                    <NumericFormat
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="R$ "
+                      decimalScale={2}
+                      fixedDecimalScale
+                      allowNegative={false}
+                      customInput={Input}
+                      value={field.value}
+                      onValueChange={(values) => {
+                        field.onChange(values.floatValue || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Situação */}
+            <FormField
+              control={form.control}
+              name="situacao"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+                  <FormLabel className="text-sm font-medium">Situação</FormLabel>
+                  <FormControl>
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end gap-2 pt-4">
+              <DialogClose asChild>
+                <Button variant="outline">Cancelar</Button>
+              </DialogClose>
+              <Button type="submit">Salvar</Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 };
 
