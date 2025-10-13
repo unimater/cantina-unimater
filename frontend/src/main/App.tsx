@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import CategoriasPage from '@/app/categoria/page';
 
 function App() {
   return (
@@ -33,6 +34,10 @@ function App() {
         <Route
           path='usuarios'
           element={<ListarUsuarios />}
+        />
+        <Route
+          path='categorias'
+          element={<CategoriasPage />}
         />
       </Route>
     </Routes>

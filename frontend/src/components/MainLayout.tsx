@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Outlet } from 'react-router-dom';
-import { Home, Users, LogOut } from 'lucide-react';
+import { Home, Users, LogOut, Shapes } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +33,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       href: '/usuarios',
       icon: Users,
       current: location.pathname === '/usuarios',
+    },
+    {
+      name: 'Categorias',
+      href: '/categorias',
+      icon: Shapes,
+      current: location.pathname === '/categorias',
     },
   ];
 
