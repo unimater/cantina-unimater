@@ -6,6 +6,7 @@ import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
 import ListarProdutos from '@/pages/Produto/ListarProduto';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import FormasPagamento from '@/pages/FormasPagamento/FormasPagamento';
 import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
 
@@ -45,6 +46,10 @@ function App() {
           element={<ListarUsuarios />}
         />
         <Route
+          path='formas-pagamento'
+          element={<FormasPagamento />}
+        />
+        <Route
           path='categorias'
           element={<CategoriasPage />}
         />
@@ -53,6 +58,15 @@ function App() {
           element={<ListarProdutos />}
         />
       </Route>
+
+      <Route
+        path='/'
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
     </Routes>
   );
 }
