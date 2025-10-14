@@ -1,6 +1,7 @@
 export interface Categoria {
-  id: number;
+  id: string;
   descricao: string;
+  nome: string;
   tipo: 'PRODUTO' | 'DESPESA';
   situacao: boolean;
 }
