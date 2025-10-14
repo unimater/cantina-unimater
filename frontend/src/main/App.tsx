@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import ListarDespesas from '@/pages/Despesas/ListarDespesas';
 
 function App() {
   return (
@@ -33,6 +34,10 @@ function App() {
         <Route
           path='usuarios'
           element={<ListarUsuarios />}
+        />
+        <Route
+          path='despesas'
+          element={<ListarDespesas />}
         />
       </Route>
     </Routes>

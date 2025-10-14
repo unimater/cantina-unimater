@@ -34,6 +34,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       icon: Users,
       current: location.pathname === '/usuarios',
     },
+     {
+      name: 'Despesas',
+      href: '/despesas',
+      icon: Users,
+      current: location.pathname === '/despesas',
+    },
   ];
 
   return (
