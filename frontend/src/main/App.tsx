@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import FormasPagamento from "@/pages/FormasPagamento/FormasPagamento";
 
 function App() {
   return (
@@ -34,7 +35,21 @@ function App() {
           path='usuarios'
           element={<ListarUsuarios />}
         />
+        <Route
+          path="formas-pagamento"
+          element={<FormasPagamento />}
+        />
       </Route>
+
+      <Route
+        path='/'
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+
     </Routes>
   );
 }
