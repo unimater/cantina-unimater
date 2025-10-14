@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import { EsqSenha } from '@/pages/Login/EsqSenha';
 
 function App() {
   return (
@@ -17,7 +18,14 @@ function App() {
           </PublicRoute>
         }
       />
-
+      <Route
+        path='/esq-senha'
+        element={
+          <PublicRoute>
+            <EsqSenha />
+          </PublicRoute>
+        }
+      />
       <Route
         path='/'
         element={
