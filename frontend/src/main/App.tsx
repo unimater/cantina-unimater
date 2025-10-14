@@ -4,8 +4,11 @@ import { Dashboard } from '@/pages/Dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
+import ListarProdutos from '@/pages/Produto/ListarProduto';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
-import FormasPagamento from "@/pages/FormasPagamento/FormasPagamento";
+import FormasPagamento from '@/pages/FormasPagamento/FormasPagamento';
+import CategoriasPage from '@/app/categoria/page';
+import { EsqSenha } from '@/pages/Login/EsqSenha';
 
 function App() {
   return (
@@ -18,7 +21,14 @@ function App() {
           </PublicRoute>
         }
       />
-
+      <Route
+        path='/esq-senha'
+        element={
+          <PublicRoute>
+            <EsqSenha />
+          </PublicRoute>
+        }
+      />
       <Route
         path='/'
         element={
@@ -36,8 +46,16 @@ function App() {
           element={<ListarUsuarios />}
         />
         <Route
-          path="formas-pagamento"
+          path='formas-pagamento'
           element={<FormasPagamento />}
+        />
+        <Route
+          path='categorias'
+          element={<CategoriasPage />}
+        />
+        <Route
+          path='produtos'
+          element={<ListarProdutos />}
         />
       </Route>
 
@@ -49,7 +67,6 @@ function App() {
           </PublicRoute>
         }
       />
-
     </Routes>
   );
 }

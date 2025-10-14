@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, LogOut, CreditCard } from 'lucide-react';
+import { Home, Users, LogOut, Shapes, Boxes, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { authUtils } from '@/lib/auth';
@@ -38,7 +38,19 @@ export function MainLayout({ children }: MainLayoutProps) {
       href: '/formas-pagamento',
       icon: CreditCard,
       current: location.pathname === '/formas-pagamento',
-    }
+    },
+    {
+      name: 'Categorias',
+      href: '/categorias',
+      icon: Shapes,
+      current: location.pathname === '/categorias',
+    },
+    {
+      name: 'Produtos',
+      href: '/produtos',
+      icon: Boxes,
+      current: location.pathname === '/produtos',
+    },
   ];
 
   return (
