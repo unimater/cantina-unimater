@@ -26,8 +26,21 @@ import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
 import { PencilLine } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type FormValues = z.infer<typeof produtoSchema>;
+
+const categorias = [
+  { id: '1', nome: 'Salgados' },
+  { id: '2', nome: 'Bebidas' },
+  { id: '3', nome: 'Doces' },
+];
 
 interface EditarProdutoProps {
   produto: Produto;
@@ -49,6 +62,7 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
       nome: produto.descricao,
       valor: produto.valor,
       situacao: produto.situacao,
+      categoriaId: produto.categoria?.id ?? '',
     },
   });
 
@@ -64,11 +78,16 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
       return;
     }
 
+    const categoriaSelecionada = categorias.find(
+      (c) => c.id === data.categoriaId
+    )!;
+
     const produtoAtualizado: Produto = {
       ...produto,
       descricao: data.nome.trim(),
       valor: data.valor,
       situacao: data.situacao,
+      categoria: categoriaSelecionada,
       updatedAt: new Date().toISOString(),
     };
 
@@ -146,6 +165,35 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
                       }}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Categoria */}
+            <FormField
+              control={form.control}
+              name="categoriaId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categorias.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

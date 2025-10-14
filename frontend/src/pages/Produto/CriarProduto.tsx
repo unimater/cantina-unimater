@@ -34,6 +34,12 @@ interface CriarProdutoProps {
   produtosExistentes: Produto[];
 }
 
+const categorias = [
+  { id: '1', nome: 'Salgados' },
+  { id: '2', nome: 'Bebidas' },
+  { id: '3', nome: 'Doces' },
+];
+
 const CriarProduto: React.FC<CriarProdutoProps> = ({
   onProdutoCriado,
   produtosExistentes,
@@ -47,6 +53,7 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
       nome: '',
       valor: 0,
       situacao: true,
+      categoriaId: ''
     },
   });
 
@@ -60,6 +67,8 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
       return;
     }
 
+    const categoriaSelecionada = categorias.find(c => c.id === data.categoriaId)!;
+
     const novoProduto: Produto = {
       id: Date.now(),
       descricao: data.nome.trim(),
@@ -67,6 +76,7 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
       situacao: data.situacao,
       createdAt: new Date().toISOString(),
       updatedAt: '',
+      categoria: categoriaSelecionada
     };
 
     onProdutoCriado(novoProduto);
@@ -98,7 +108,6 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Nome */}
             <FormField
               control={form.control}
               name="nome"
@@ -110,11 +119,34 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
                       {...field}
                       placeholder="Ex: Pão de Queijo"
                       ref={(el) => {
-                        // combina o ref do hook form + seu inputRef local
                         field.ref(el);
                         inputRef.current = el;
                       }}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="categoriaId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Categoria</FormLabel>
+                  <FormControl>
+                    <select
+                      {...field}
+                      className="border rounded-md px-3 py-2 w-full"
+                    >
+                      <option value={0}>Selecione uma categoria</option>
+                      {categorias.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.nome}
+                        </option>
+                      ))}
+                    </select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

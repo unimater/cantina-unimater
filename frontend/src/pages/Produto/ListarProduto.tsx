@@ -16,14 +16,52 @@ import CriarProduto from './CriarProduto';
 import EditarProduto from './EditarProduto';
 import type { Produto } from '@/type/Produto';
 
+const categorias = [
+  { id: '1', nome: 'Salgados' },
+  { id: '2', nome: 'Bebidas' },
+  { id: '3', nome: 'Doces' },
+];
+
 const currency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
 const ListarProdutos: React.FC = () => {
   const [produtos, setProdutos] = useState<Produto[]>([
-    { id: 1, descricao: 'Pastel', situacao: true, valor: 5.0, createdAt: '', updatedAt: '' },
-    { id: 2, descricao: 'Pão de Queijo', situacao: true, valor: 4.5, createdAt: '', updatedAt: '' },
-    { id: 3, descricao: 'Coxinha', situacao: true, valor: 5.0, createdAt: '', updatedAt: '' },
-    { id: 4, descricao: 'Refrigerante', situacao: true, valor: 5.0, createdAt: '', updatedAt: '' },
+    {
+      id: 1,
+      descricao: 'Pastel',
+      situacao: true,
+      valor: 5.0,
+      createdAt: '',
+      updatedAt: '',
+      categoria: categorias[0],
+    },
+    {
+      id: 2,
+      descricao: 'Pão de Queijo',
+      situacao: true,
+      valor: 4.5,
+      createdAt: '',
+      updatedAt: '',
+      categoria: categorias[0],
+    },
+    {
+      id: 3,
+      descricao: 'Coxinha',
+      situacao: true,
+      valor: 5.0,
+      createdAt: '',
+      updatedAt: '',
+      categoria: categorias[0],
+    },
+    {
+      id: 4,
+      descricao: 'Refrigerante',
+      situacao: true,
+      valor: 5.0,
+      createdAt: '',
+      updatedAt: '',
+      categoria: categorias[1],
+    },
   ]);
 
   const [filtro, setFiltro] = useState('');
@@ -83,6 +121,7 @@ const ListarProdutos: React.FC = () => {
             <TableRow>
               <TableHead className="text-left">ID</TableHead>
               <TableHead className="text-left">Descrição</TableHead>
+              <TableHead className="text-left">Categoria</TableHead>
               <TableHead className="text-right">Valor</TableHead>
               <TableHead className="text-left">Situação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -95,6 +134,7 @@ const ListarProdutos: React.FC = () => {
                 <TableRow key={p.id} className="hover:bg-gray-50">
                   <TableCell className="font-mono text-sm">{p.id}</TableCell>
                   <TableCell>{p.descricao}</TableCell>
+                  <TableCell>{p.categoria?.nome ?? '—'}</TableCell>
                   <TableCell className="text-right">{currency(p.valor)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">

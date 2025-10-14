@@ -135,13 +135,16 @@ export function Dashboard() {
               </div>
             </Link>
 
-            <div className='flex items-center rounded-lg bg-green-50 p-3'>
+            <Link
+              to='/produtos'
+              className='flex items-center rounded-lg bg-green-50 p-3 transition-colors hover:bg-green-100'
+            >
               <Coffee className='mr-3 h-5 w-5 text-green-600' />
               <div>
                 <div className='font-medium text-green-900'>Cardápio</div>
                 <div className='text-sm text-green-600'>Gerenciar produtos e preços</div>
               </div>
-            </div>
+            </Link>
 
             <div className='flex items-center rounded-lg bg-orange-50 p-3'>
               <Package className='mr-3 h-5 w-5 text-orange-600' />
