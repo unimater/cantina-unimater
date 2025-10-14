@@ -34,6 +34,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       current: location.pathname === '/usuarios',
     },
     {
+      name: 'Despesas',
+      href: '/despesas',
+      icon: Users,
+      current: location.pathname === '/despesas',
+    },
+    {
       name: 'Formas de Pagamento',
       href: '/formas-pagamento',
       icon: CreditCard,
