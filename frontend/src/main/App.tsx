@@ -4,7 +4,9 @@ import { Dashboard } from '@/pages/Dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
+import ListarProdutos from '@/pages/Produto/ListarProduto';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
 
 function App() {
@@ -41,6 +43,14 @@ function App() {
         <Route
           path='usuarios'
           element={<ListarUsuarios />}
+        />
+        <Route
+          path='categorias'
+          element={<CategoriasPage />}
+        />
+        <Route
+          path='produtos'
+          element={<ListarProdutos />}
         />
       </Route>
     </Routes>
