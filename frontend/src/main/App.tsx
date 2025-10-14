@@ -1,10 +1,12 @@
 import { Route, Routes } from 'react-router';
 import { Login } from '../pages/Login/Login';
-import UsuariosPage from '@/app/usuario/page';
 import { Dashboard } from '@/pages/Dashboard/Dashboard';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { PublicRoute } from '@/components/PublicRoute';
 import { MainLayout } from '@/components/MainLayout';
+import ListarProdutos from '@/pages/Produto/ListarProduto';
+import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
+import { EsqSenha } from '@/pages/Login/EsqSenha';
 
 function App() {
   return (
@@ -17,7 +19,14 @@ function App() {
           </PublicRoute>
         }
       />
-
+      <Route
+        path='/esq-senha'
+        element={
+          <PublicRoute>
+            <EsqSenha />
+          </PublicRoute>
+        }
+      />
       <Route
         path='/'
         element={
@@ -32,7 +41,11 @@ function App() {
         />
         <Route
           path='usuarios'
-          element={<UsuariosPage />}
+          element={<ListarUsuarios />}
+        />
+        <Route
+          path='produtos'
+          element={<ListarProdutos />}
         />
       </Route>
     </Routes>
