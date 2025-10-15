@@ -37,13 +37,17 @@ export class AuthController {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User credentials do not match.');
+      throw new UnauthorizedException(
+        'As credenciais do usuário não foram encontradas.',
+      );
     }
 
     const isPasswordValid = await compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new UnauthorizedException('User credentials do not match.');
+      throw new UnauthorizedException(
+        'As credenciais do usuário não foram encontradas.',
+      );
     }
 
     const accessToken = this.jwt.sign({ sub: user.id });
