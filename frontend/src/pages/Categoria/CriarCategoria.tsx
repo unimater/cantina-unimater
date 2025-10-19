@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Categoria } from '@/type/Categoria';
+import api from '@/api/api';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -46,7 +47,7 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
     },
   });
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     const descricaoNormalizada = (str: string) =>
       str
         .trim()
@@ -66,23 +67,40 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
     }
 
     const novaCategoria: Categoria = {
-      id: Date.now(),
       descricao: data.descricao,
       tipo: data.tipo,
       situacao: data.situacao,
     };
 
-    onCategoriaCriada(novaCategoria);
-    toast.success('Sucesso!', {
-      description: 'A categoria foi incluída com sucesso.',
-    });
+    try {
+      // Requisição POST usando axios
+      const response = await api.post('/categorias', novaCategoria);
 
-    form.reset({
-      descricao: '',
-      tipo: 'PRODUTO',
-      situacao: true,
-    });
-    setOpen(false);
+      // Retorna a categoria criada do backend
+      const categoriaCriada = response.data;
+
+      // Atualiza a UI
+      onCategoriaCriada(categoriaCriada);
+
+      toast.success('Sucesso!', {
+        description: 'A categoria foi incluída com sucesso.',
+      });
+
+      form.reset({
+        descricao: '',
+        tipo: 'PRODUTO',
+        situacao: true,
+      });
+      setOpen(false);
+    } catch (error: any) {
+      // Axios já fornece error.response
+      const message =
+        error.response?.data?.message || error.message || 'Não foi possível salvar a categoria.';
+
+      toast.error('Erro!', {
+        description: message,
+      });
+    }
   };
 
   const handleCancelar = () => {

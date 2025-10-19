@@ -24,6 +24,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { categoriaSchema } from '@/lib/CategoriaSchema';
 import type { Categoria } from '@/type/Categoria';
+import api from '@/api/api';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -60,7 +61,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
     }
   }, [open, categoria.id, form]);
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     const descricaoNormalizada = (str: string) =>
       str
         .trim()
@@ -69,7 +70,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
         .replace(/[\u0300-\u036f]/g, '');
 
     const descricaoDuplicada = categoriasExistentes
-      .filter(c => c.id !== categoria.id)
+      .filter(c => c.id !== categoria.id) // ignora a própria categoria
       .some(c => descricaoNormalizada(c.descricao) === descricaoNormalizada(data.descricao));
 
     if (descricaoDuplicada) {
@@ -86,11 +87,33 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
       situacao: data.situacao,
     };
 
-    onCategoriaAtualizada(categoriaAtualizada);
-    toast.success('Sucesso!', {
-      description: 'A categoria foi atualizada com sucesso.',
-    });
-    setOpen(false);
+    try {
+      // Requisição PATCH para atualizar a categoria no backend
+      const response = await api.patch(`/categorias/${categoria.id}`, categoriaAtualizada);
+
+      const categoriaAtualizadaDoBackend = response.data;
+
+      // Atualiza a UI
+      onCategoriaAtualizada(categoriaAtualizadaDoBackend);
+
+      toast.success('Sucesso!', {
+        description: 'A categoria foi atualizada com sucesso.',
+      });
+
+      form.reset({
+        descricao: '',
+        tipo: 'PRODUTO',
+        situacao: true,
+      });
+      setOpen(false);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || error.message || 'Não foi possível atualizar a categoria.';
+
+      toast.error('Erro!', {
+        description: message,
+      });
+    }
   };
 
   return (

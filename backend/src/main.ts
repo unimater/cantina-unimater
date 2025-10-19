@@ -9,6 +9,10 @@ async function bootstrap() {
   const configService = app.get<ConfigService<Env, true>>(ConfigService);
   const port = configService.get('PORT', { infer: true });
 
-  await app.listen(port);
+  app.enableCors({
+  origin: 'http://127.0.0.1:8080',
+});
+
+  await app.listen(port); 
 }
 bootstrap();
