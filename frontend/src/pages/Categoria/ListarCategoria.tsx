@@ -10,59 +10,60 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CriarCategoria from './CriarCategoria';
-import type { Categoria } from '@/type/Categoria';
-import { toast } from 'sonner';
 import EditarCategoria from './EditarCategoria';
+import { toast } from 'sonner';
+import type { Categoria } from '@/type/Categoria';
+import api from '@/api/api';
 
 const ListarCategoria: React.FC = () => {
-  const [categorias, setCategorias] = useState<Categoria[]>([
-    {
-      id: 1,
-      descricao: 'Bebidas',
-      tipo: 'PRODUTO',
-      situacao: true,
-    },
-    {
-      id: 2,
-      descricao: 'Alimentação',
-      tipo: 'PRODUTO',
-      situacao: true,
-    },
-    {
-      id: 3,
-      descricao: 'Material de Limpeza',
-      tipo: 'DESPESA',
-      situacao: false,
-    },
-  ]);
-
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [filtro, setFiltro] = useState('');
 
-  const handleCriar = (novaCategoria: Categoria) => {
-    setCategorias(prev => [...prev, novaCategoria]);
+  // Buscar categorias do backend
+  const fetchCategorias = async () => {
+    try {
+      const response = await api.get('/categorias');
+      setCategorias(response.data);
+    } catch (error: any) {
+      toast.error('Erro ao carregar categorias', {
+        description: error.response?.data?.message || error.message,
+      });
+    }
   };
 
+  useEffect(() => {
+    fetchCategorias();
+  }, []);
+
+  // Criar categoria
+  const handleCriar = (categoria: Categoria) => {
+    setCategorias(prev => [...prev, categoria]);
+  };
+
+  // Atualizar categoria
   const handleAtualizar = (categoriaAtualizada: Categoria) => {
     setCategorias(prev =>
       prev.map(c => (c.id === categoriaAtualizada.id ? categoriaAtualizada : c))
     );
   };
 
-  const handleExcluir = (id: number) => {
-    if (
-      confirm(
-        'Ao excluir o item não será possível reverter. Deseja realmente prosseguir com a ação?'
-      )
-    ) {
+  // Excluir categoria
+  const handleExcluir = async (id: string) => {
+    try {
+      await api.delete(`/categorias/${id}`);
       setCategorias(prev => prev.filter(c => c.id !== id));
-      toast.success('Excluído', { description: 'A categoria foi removida com sucesso.' });
+      toast.success('Categoria excluída com sucesso!');
+    } catch (error: any) {
+      toast.error('Erro ao excluir categoria', {
+        description: error.response?.data?.message || error.message,
+      });
     }
   };
 
   const categoriasFiltradas = categorias.filter(c =>
-    c.descricao.toLowerCase().includes(filtro.toLowerCase())
+    c.descricao?.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
