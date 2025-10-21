@@ -1,0 +1,14 @@
+{
+  "name": "cantina-unimater",
+  "version": "0.0.0",
+  "repository": "https://github.com/unimater/cantina-unimater",
+  "author": "Unimater",
+  "private": false,
+  "contributors": [
+    "Arthur Lunkes",
+    "Seus nomes aqui"
+  ],
+  "scripts": {
+    "clean": "rm -rf node_modules && yarn cache clean && yarn install"
+  }
+}

@@ -2,8 +2,13 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+  "contributors": [
+    "Arthur Lunkes",
+    "Seus nomes aqui!"
+  ],
   "type": "module",
   "scripts": {
+    "cache-clean": "yarn cache clean",
     "dev": "vite --mode development",
     "build": "tsc -b && vite build --mode production",
     "lint": "eslint .",

@@ -72,3 +72,12 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.zip
 *.tar.gz
 *.rar
+
+# Yarn
+yarn.lock
+
+# pnpm
+pnpm-lock.yaml
+
+# NPM
+package-lock.json

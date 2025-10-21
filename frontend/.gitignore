@@ -2,5 +2,11 @@
 dist
 dist-ssr
 *.local
+build
+package-lock.json
+yarn.lock
+
+# Node specific files
+node_modules
 
 # Vite/React specific files
