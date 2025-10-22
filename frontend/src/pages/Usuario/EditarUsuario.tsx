@@ -112,7 +112,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
   return (
     <Dialog
       open={open}
-      onOpenChange={isOpen => {
+      onOpenChange={(isOpen: boolean | ((prevState: boolean) => boolean)) => {
         if (!isOpen && temAlteracao) {
           if (confirm('Você possui alterações não salvas. Deseja realmente sair?')) {
             setOpen(false);

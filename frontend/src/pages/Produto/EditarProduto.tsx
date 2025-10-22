@@ -25,7 +25,6 @@ import { toast } from 'sonner';
 import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
-import { PencilLine } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -108,9 +107,9 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
         <Button
           variant="outline"
           size="sm"
-          className="h-8 px-3 text-sm rounded-md align-middle inline-flex items-center justify-center hover:bg-gray-100"
+          className="h-8 px-3 text-sm rounded-md hover:bg-gray-100"
         >
-          <PencilLine size={14} className="mr-1" /> Editar
+          Editar
         </Button>
       </DialogTrigger>
 
