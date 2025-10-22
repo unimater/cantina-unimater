@@ -23,12 +23,16 @@ export function Login() {
   const navigate = useNavigate();
 
   const mutation = useMutation({
-    mutationFn: () => {
-      return axios.post('http://localhost:3000/sessions', { username: email, password });
+    mutationFn: async () => {
+      const response = await axios.post('http://localhost:3000/sessions', {
+        username: email,
+        password,
+      });
+      return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast('Login realizado com sucesso.', {
-        description: 'Redirecionando para a página de usuários...',
+        description: 'Redirecionando para a área de usuários...',
       });
 
       const userData = {
@@ -53,19 +57,16 @@ export function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      if (email && password) {
-        mutation.mutate();
-      } else {
-        alert('Por favor, preencha email e senha');
-      }
-    } catch (error) {
-      console.error('Erro no login:', error);
-      alert('Erro ao fazer login');
-    } finally {
+    if (!email || !password) {
+      toast.error('Por favor, preencha email e senha.');
       setIsLoading(false);
+      return;
     }
+
+    mutation.mutate();
+    setIsLoading(false);
   };
+
   return (
     <div className='flex min-h-svh flex-col items-center justify-center'>
       <Card className='w-full max-w-sm'>
@@ -86,10 +87,11 @@ export function Login() {
                   type='email'
                   placeholder='email@example.com'
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
+
               <div className='grid gap-2'>
                 <div className='flex items-center'>
                   <Label htmlFor='password'>Senha</Label>
@@ -104,7 +106,7 @@ export function Login() {
                   id='password'
                   type='password'
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
