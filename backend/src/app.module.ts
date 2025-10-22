@@ -11,6 +11,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { ProdutosModule } from './produtos/produtos.module';
 import { UsersModule } from './users/users.module';
 import { AuthController } from './auth/auth.controller';
+import { EmailModule } from './emails/email.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AuthController } from './auth/auth.controller';
     DespesasModule,
     CategoriasModule,
     ProdutosModule,
+    EmailModule
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, PrismaService],
