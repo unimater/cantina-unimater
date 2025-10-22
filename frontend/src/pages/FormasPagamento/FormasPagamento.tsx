@@ -1,140 +1,160 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
-import CriarPagamento from './CriarFormaPagamento.tsx';
-import EditarFormaPagamento from './EditarFormaPagamento.tsx';
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import { toast } from 'sonner'
+import CriarFormaPagamento from './CriarFormaPagamento'
+import EditarFormaPagamento from './EditarFormaPagamento'
 
-export type FormaPagamento = {
-  id: number;
-  nome: string;
-  ativo: boolean;
-};
+interface FormaPagamento {
+  id: number
+  nome: string
+  situacao: boolean
+}
 
-const FormasPagamento: React.FC = () => {
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([
-    {
-      id: 1,
-      nome: 'Cartão de Crédito',
-      ativo: true,
-    },
-    {
-      id: 2,
-      nome: 'Pix',
-      ativo: true,
-    },
-  ]);
+export default function FormasPagamento() {
+  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([])
+  const [buscaId, setBuscaId] = useState('')
+  const [resultadoBusca, setResultadoBusca] = useState<FormaPagamento | null>(null)
+  const [formaSelecionada, setFormaSelecionada] = useState<FormaPagamento | null>(null)
+  const [modalAberto, setModalAberto] = useState(false)
 
-  const [filtro, setFiltro] = useState('');
+  useEffect(() => {
+    setFormasPagamento([
+      { id: 1, nome: 'Dinheiro', situacao: true },
+      { id: 2, nome: 'Cartão de Crédito', situacao: true },
+      { id: 3, nome: 'Pix', situacao: false },
+    ])
+  }, [])
 
-  const handleCriar = (novaForma: FormaPagamento) => {
-    setFormasPagamento(prev => [...prev, novaForma]);
-    toast.success('Forma de pagamento criada com sucesso!');
-  };
+  const listarFormasPagamento = () => formasPagamento
 
-  const handleAtualizar = (formaAtualizada: FormaPagamento) => {
-    setFormasPagamento(prev =>
-      prev.map(f => (f.id === formaAtualizada.id ? formaAtualizada : f))
-    );
-    toast.success('Forma de pagamento atualizada!');
-  };
-
-  const handleExcluir = (id: number) => {
-    if (
-      confirm(
-        'Ao excluir o item não será possível reverter. Deseja realmente prosseguir com a ação?'
-      )
-    ) {
-      setFormasPagamento(prev => prev.filter(f => f.id !== id));
-      toast.success('Excluído', { description: 'A forma de pagamento foi removida com sucesso.' });
+  const buscarFormaPagamentoPorId = (id: number) => {
+    const forma = formasPagamento.find(f => f.id === id)
+    if (!forma) {
+      toast.error('Forma de pagamento não encontrada')
+      setResultadoBusca(null)
+      return
     }
-  };
+    setResultadoBusca(forma)
+  }
 
-  const formasFiltradas = formasPagamento.filter(f =>
-    f.nome.toLowerCase().includes(filtro.toLowerCase())
-  );
+  const criarFormaPagamento = (nova: Omit<FormaPagamento, 'id'>) => {
+    const novoId = formasPagamento.length > 0 ? Math.max(...formasPagamento.map(f => f.id)) + 1 : 1
+    setFormasPagamento(prev => [...prev, { ...nova, id: novoId }])
+    toast.success('Forma de pagamento criada com sucesso')
+  }
+
+  const atualizarFormaPagamento = (id: number, dados: Partial<FormaPagamento>) => {
+    setFormasPagamento(prev => prev.map(f => (f.id === id ? { ...f, ...dados } : f)))
+    toast.success('Forma de pagamento atualizada')
+  }
+
+  const deletarFormaPagamento = (id: number) => {
+    setFormasPagamento(prev => prev.filter(f => f.id !== id))
+    toast.success('Forma de pagamento excluída')
+  }
+
+  useEffect(() => {
+    if (!buscaId) setResultadoBusca(null)
+  }, [buscaId])
 
   return (
-    <Card>
-      <CardHeader>
-        <div className='flex flex-col justify-between gap-4 md:flex-row md:items-center'>
-          <CardTitle>Formas de Pagamento</CardTitle>
-          <div className='flex flex-col gap-4 sm:flex-row'>
-            <div className='relative'>
-              <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
-              <Input
-                placeholder='Filtrar por nome...'
-                value={filtro}
-                onChange={e => setFiltro(e.target.value)}
-                maxLength={150}
-                className='pl-10'
-              />
-            </div>
-            <CriarPagamento onFormaCriada={handleCriar} formasExistentes={formasPagamento} />
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead className='text-right'>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {formasFiltradas.length > 0 ? (
-              formasFiltradas.map(forma => (
-                <TableRow key={forma.id}>
-                  <TableCell className='font-mono text-sm'>{forma.id}</TableCell>
-                  <TableCell>{forma.nome}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${forma.ativo ? 'bg-green-500' : 'bg-red-500'
-                        }`}
-                    />
-                    {forma.ativo ? 'Ativo' : 'Inativo'}
-                  </TableCell>
-                  <TableCell className='space-x-2 text-right'>
-                    <EditarFormaPagamento
-                      formaPagamento={forma}
-                      onFormaAtualizada={handleAtualizar}
-                      formasExistentes={formasPagamento}
-                    />
-                    <Button
-                      variant='destructive'
-                      size='sm'
-                      onClick={() => handleExcluir(forma.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} className='text-muted-foreground py-6 text-center'>
-                  Nenhuma forma de pagamento encontrada.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-};
+    <div className='p-6'>
+      <div className='flex items-center justify-between mb-6'>
+        <h2 className='text-2xl font-bold'>Formas de Pagamento</h2>
+        <CriarFormaPagamento onCriado={criarFormaPagamento} existentes={formasPagamento} />
+      </div>
 
-export default FormasPagamento;
+      <div className='flex items-center gap-2 mb-4'>
+        <Input
+          placeholder='Buscar por ID'
+          value={buscaId}
+          onChange={e => setBuscaId(e.target.value)}
+          className='max-w-[200px]'
+        />
+        <Button
+          onClick={() => {
+            if (buscaId && !isNaN(Number(buscaId))) buscarFormaPagamentoPorId(Number(buscaId))
+            else toast.error('Digite um ID válido')
+          }}
+        >
+          Buscar
+        </Button>
+      </div>
+
+      {resultadoBusca && (
+        <div className='rounded-lg border p-4 bg-white shadow-sm mb-6'>
+          <h3 className='font-semibold mb-2'>Resultado da Busca</h3>
+          <p><strong>ID:</strong> {resultadoBusca.id}</p>
+          <p><strong>Nome:</strong> {resultadoBusca.nome}</p>
+          <p>
+            <strong>Situação:</strong>{' '}
+            {resultadoBusca.situacao ? (
+              <span className='text-green-600 font-medium'>Ativo</span>
+            ) : (
+              <span className='text-red-600 font-medium'>Inativo</span>
+            )}
+          </p>
+        </div>
+      )}
+
+      <div className='rounded-lg border bg-white shadow-sm overflow-hidden'>
+        <table className='w-full border-collapse text-sm'>
+          <thead className='bg-gray-100 text-gray-700'>
+            <tr>
+              <th className='text-left p-3'>ID</th>
+              <th className='text-left p-3'>Nome</th>
+              <th className='text-left p-3'>Situação</th>
+              <th className='text-right p-3'>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {listarFormasPagamento().map(forma => (
+              <tr key={forma.id} className='border-t'>
+                <td className='p-3'>{forma.id}</td>
+                <td className='p-3'>{forma.nome}</td>
+                <td className='p-3'>
+                  <div className='flex items-center gap-2'>
+                    <Switch
+                      checked={forma.situacao}
+                      onCheckedChange={v => atualizarFormaPagamento(forma.id, { situacao: v })}
+                    />
+                    {forma.situacao ? (
+                      <span className='text-green-600 font-medium'>Ativo</span>
+                    ) : (
+                      <span className='text-red-600 font-medium'>Inativo</span>
+                    )}
+                  </div>
+                </td>
+                <td className='p-3 text-right'>
+                  <Button
+                    variant='outline'
+                    className='mr-2'
+                    onClick={() => {
+                      setFormaSelecionada(forma)
+                      setModalAberto(true)
+                    }}
+                  >
+                    Editar
+                  </Button>
+                  <Button variant='destructive' onClick={() => deletarFormaPagamento(forma.id)}>
+                    Excluir
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {modalAberto && formaSelecionada && (
+        <EditarFormaPagamento
+          forma={formaSelecionada}
+          onAtualizado={atualizarFormaPagamento}
+          onFechar={() => setModalAberto(false)}
+        />
+      )}
+    </div>
+  )
+}
