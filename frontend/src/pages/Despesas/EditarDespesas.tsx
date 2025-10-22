@@ -22,35 +22,16 @@ import { Input } from '@/components/ui/input';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { Despesa } from '@/type/Despesa';
+import { despesaSchema, type FormValues } from './schemas';
 
-// Schema
-const despesaSchema = z.object({
-  descricao: z
-    .string()
-    .min(1, 'Descrição é obrigatória')
-    .max(100, 'Máximo de 100 caracteres'),
-  categoria: z.string().min(1, 'Categoria é obrigatória'),
-  data: z
-    .string()
-    .refine(value => {
-      const data = new Date(value);
-      const hoje = new Date();
-      return data <= hoje;
-    }, 'Não é permitido registrar uma data futura.'),
-});
 
-type FormValues = z.infer<typeof despesaSchema>;
 
 interface EditarDespesaProps {
   despesa: Despesa;
-  onDespesaAtualizada: (despesa: Despesa) => void;
-  despesasExistentes: Despesa[];
 }
 
 const EditarDespesa: React.FC<EditarDespesaProps> = ({
   despesa,
-  onDespesaAtualizada,
-  despesasExistentes,
 }) => {
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
@@ -59,7 +40,7 @@ const EditarDespesa: React.FC<EditarDespesaProps> = ({
     resolver: zodResolver(despesaSchema),
     defaultValues: {
       descricao: despesa.descricao || '',
-      categoria: despesa.categoria || '',
+      fornecedor: despesa.fornecedor || '',
       data: despesa.data || new Date().toISOString().split('T')[0],
     },
   });

@@ -1,3 +1,6 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -6,52 +9,41 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import type { Despesa } from '@/type/Despesa';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import CriarDespesa from './CriarDespesas';
 import EditarDespesa from './EditarDespesas';
-import type { Despesa } from '@/type/Despesa';
-import { toast } from 'sonner';
+
 
 const ListarDespesas: React.FC = () => {
-  const [despesas, setDespesas] = useState<Despesa[]>([
-    {
-      id: 1,
-      descricao: 'Energia Elétrica',
-      categoria: 'Moradia',
-      usuario: 'ana.silva',
-    },
-  ]);
+  const queryClient = useQueryClient()
+
+  const { data } = useQuery<{ data: Despesa[] }>({
+    queryKey: ['getDespesas'],
+    queryFn: () => axios.get('http://localhost:3000/despesas'),
+  });
+
+  const mutation = useMutation({
+    mutationFn: (idDespesa: string) => axios.delete(`http://localhost:3000/despesas/${idDespesa}`),
+    onSuccess: () => {
+      toast('Despesa removida com sucesso');
+      queryClient.invalidateQueries({ queryKey: ['getDespesas'] })
+    }
+  })
 
   const [filtro, setFiltro] = useState('');
 
-  const handleCriar = (novaDespesa: Despesa) => {
-    setDespesas(prev => [...prev, novaDespesa]);
-  };
-
-  const handleAtualizar = (despesaAtualizada: Despesa) => {
-    setDespesas(prev =>
-      prev.map(u => (u.id === despesaAtualizada.id ? despesaAtualizada : u))
-    );
-  };
-
-  const handleExcluir = (id: number) => {
-    if (
-      confirm(
-        'Ao excluir a despesa não será possível reverter. Deseja realmente prosseguir com a ação?'
-      )
-    ) {
-      setDespesas(prev => prev.filter(u => u.id !== id));
-      toast.success('Excluído', { description: 'Despesa foi removida com sucesso.' });
-    }
-  };
-
-  const despesasFiltradas = despesas.filter(u =>
+  const despesasFiltradas = data?.data?.filter(u =>
     u.descricao.toLowerCase().includes(filtro.toLowerCase())
   );
+
+  const handleExcluir = (idDespesa: string) => {
+    mutation.mutate(idDespesa)
+  }
 
   return (
     <Card>
@@ -69,10 +61,7 @@ const ListarDespesas: React.FC = () => {
                 className="pl-10"
               />
             </div>
-            <CriarDespesa
-              onDespesaCriada={handleCriar}
-              despesasExistentes={despesas}
-              usuarioAtual="ana.silva"
+            <CriarDespesa              
             />
           </div>
         </div>
@@ -80,59 +69,67 @@ const ListarDespesas: React.FC = () => {
 
       <CardContent>
         <Table>
-  <TableHeader>
-    <TableRow>
-      <TableHead className="w-[80px] text-center">ID</TableHead>
-      <TableHead>Descrição</TableHead>
-      <TableHead className="w-[200px] text-center">Categoria</TableHead>
-      <TableHead className="w-[120px] text-right">Ações</TableHead>
-    </TableRow>
-  </TableHeader>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Descrição</TableHead>
+              <TableHead className="w-[200px] text-center">Fornecedor</TableHead>
+              <TableHead className="w-[200px] text-center">Valor</TableHead>
+              <TableHead className="w-[200px] text-center">Observação</TableHead>
+              <TableHead className="w-[200px] text-center">Data</TableHead>
+              <TableHead className="w-[120px] text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
 
-  <TableBody>
-    {despesasFiltradas.length > 0 ? (
-      despesasFiltradas.map(despesa => (
-        <TableRow key={despesa.id}>
-          <TableCell className="font-mono text-sm text-center">
-            {despesa.id}
-          </TableCell>
+          <TableBody>
+            {despesasFiltradas && despesasFiltradas.length > 0 ? (
+              despesasFiltradas.map(despesa => (
+                <TableRow key={despesa.id}>
+                  <TableCell>{despesa.descricao}</TableCell>
 
-          <TableCell>{despesa.descricao}</TableCell>
+                  <TableCell className="text-center font-mono">
+                    {despesa.fornecedor}
+                  </TableCell>
 
-          <TableCell className="text-center font-mono">
-            {despesa.categoria}
-          </TableCell>
+                  <TableCell className="text-center font-mono">
+                    {despesa.valor}            
+                  </TableCell>
 
-          <TableCell className="text-right">
-            <div className="flex justify-end gap-2">
-              <EditarDespesa
-                despesa={despesa}
-                onDespesaAtualizada={handleAtualizar}
-                despesasExistentes={despesas}
-              />
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleExcluir(despesa.id)}
-              >
-                Excluir
-              </Button>
-            </div>
-          </TableCell>
-        </TableRow>
-      ))
-    ) : (
-      <TableRow>
-        <TableCell
-          colSpan={4}
-          className="text-muted-foreground py-6 text-center"
-        >
-          Nenhuma despesa encontrada.
-        </TableCell>
-      </TableRow>
-    )}
-  </TableBody>
-</Table>
+                  <TableCell className="text-center font-mono">
+                    {despesa.observacao || "Não Informado"}
+                  </TableCell>
+
+                  <TableCell className="text-center font-mono">
+                    {despesa.data}
+                  </TableCell>
+
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <EditarDespesa
+                        despesa={despesa}
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleExcluir(despesa.id)}
+                      >
+                        Excluir
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-muted-foreground py-6 text-center"
+                >
+                  Nenhuma despesa encontrada.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

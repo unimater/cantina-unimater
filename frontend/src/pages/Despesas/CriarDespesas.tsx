@@ -7,8 +7,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import {
   Form,
   FormControl,
@@ -17,39 +15,17 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import type { Despesa } from '@/type/Despesa';
+import { toast } from 'sonner';
+import { despesaSchema, type FormValues } from './schemas';
 
-// Schema Despesa
-const despesaSchema = z.object({
-  descricao: z
-    .string()
-    .min(1, 'Descrição é obrigatória')
-    .max(100, 'Máximo de 100 caracteres'),
-  categoria: z.string().min(1, 'Categoria é obrigatória'),
-  data: z
-    .string()
-    .refine(value => {
-      const data = new Date(value);
-      const hoje = new Date();
-      return data <= hoje;
-    }, 'Não é permitido registrar uma data futura.'),
-});
 
-type FormValues = z.infer<typeof despesaSchema>;
-interface CriarDespesaProps {
-  onDespesaCriada: (despesa: Despesa) => void;
-  despesasExistentes: Despesa[];
-  usuarioAtual: string; // profissional responsável
-}
-
-const CriarDespesa: React.FC<CriarDespesaProps> = ({
-  onDespesaCriada,
-  despesasExistentes,
-  usuarioAtual,
+const CriarDespesa = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
@@ -58,7 +34,7 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
     resolver: zodResolver(despesaSchema),
     defaultValues: {
       descricao: '',
-      categoria: '',
+      fornecedor: '',
       data: new Date().toISOString().split('T')[0],
     },
   });
@@ -70,43 +46,25 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
     setTemAlteracao(tem);
   }, [campos]);
 
-  const onSubmit = (data: FormValues) => {
-    const descricaoNormalizada = (str: string) =>
-      str
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-    const duplicada = despesasExistentes.some(
-      u => descricaoNormalizada(u.descricao) === descricaoNormalizada(data.descricao)
-    );
-
-    if (duplicada) {
-      toast.error('Não foi possível salvar!', {
-        description: 'Já existe uma despesa com a mesma descrição.',
+  const mutation = useMutation({
+    mutationFn: despesa => axios.post('http://localhost:3000/despesas', despesa),
+    onSuccess: () => {
+      toast.success('Sucesso!', {
+        description: 'A despesa foi incluída com sucesso.',
       });
-      return;
     }
+  })
 
-    // Gera ID sequencial
-    const proximoId =
-      despesasExistentes.length > 0
-        ? Math.max(...despesasExistentes.map(d => d.id)) + 1
-        : 0;
+  const onSubmit = (data: FormValues) => {
 
-    const novaDespesa: Despesa = {
-      id: proximoId,
+    mutation.mutate({
       descricao: data.descricao,
-      categoria: data.categoria,
       data: data.data,
-      usuario: usuarioAtual,
-    };
-
-    onDespesaCriada(novaDespesa);
-    toast.success('Sucesso!', {
-      description: 'A despesa foi incluída com sucesso.',
+      valor: data.valor,
+      fornecedor: data.fornecedor,
+      observacao: data.observacao,
     });
+
     form.reset();
     setOpen(false);
   };
@@ -138,21 +96,6 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
             <div className="space-y-4 rounded-lg border p-4">
               <h3 className="text-lg font-semibold">Identificação</h3>
 
-              {/* Identificador (bloqueado) */}
-              <FormItem>
-                <FormLabel>ID</FormLabel>
-                <FormControl>
-                  <Input
-                    value={
-                      despesasExistentes.length > 0
-                        ? Math.max(...despesasExistentes.map(d => d.id)) + 1
-                        : 0
-                    }
-                    disabled
-                  />
-                </FormControl>
-              </FormItem>
-
               {/* Descrição */}
               <FormField
                 control={form.control}
@@ -172,32 +115,6 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
                 )}
               />
 
-              {/* Profissional responsável */}
-              <FormItem>
-                <FormLabel>Profissional Responsável</FormLabel>
-                <FormControl>
-                  <Input value={usuarioAtual} disabled />
-                </FormControl>
-              </FormItem>
-
-              {/* Categoria */}
-              <FormField
-                control={form.control}
-                name="categoria"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Ex: Moradia, Transporte, Impostos e Taxas..."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               {/* Data */}
               <FormField
                 control={form.control}
@@ -209,6 +126,60 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
                       <Input
                         type="date"
                         max={new Date().toISOString().split('T')[0]}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Valor */}
+              <FormField
+                control={form.control}
+                name="valor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valor *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ex: Informe o valor"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Fornecedor */}
+              <FormField
+                control={form.control}
+                name="fornecedor"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fornecedor *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ex: Informe o fornecedor"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Observação */}
+              <FormField
+                control={form.control}
+                name="observacao"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Observação *</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Ex: Informe o fornecedor"
                         {...field}
                       />
                     </FormControl>
