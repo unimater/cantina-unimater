@@ -15,50 +15,61 @@ import CriarCategoria from './CriarCategoria';
 import EditarCategoria from './EditarCategoria';
 import { toast } from 'sonner';
 import type { Categoria } from '@/type/Categoria';
-import api from '@/api/api';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 const ListarCategoria: React.FC = () => {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [filtro, setFiltro] = useState('');
+  const queryClient = useQueryClient();
 
-  // Buscar categorias do backend
-  const fetchCategorias = async () => {
-    try {
-      const response = await api.get('/categorias');
-      setCategorias(response.data);
-    } catch (error: any) {
-      toast.error('Erro ao carregar categorias', {
-        description: error.response?.data?.message || error.message,
-      });
-    }
-  };
+  const { data: categorias = [], error } = useQuery({
+    queryKey: ['getCategorias'],
+    queryFn: async () => {
+      const response = await axios.get('http://localhost:3000/categorias');
+      return response.data as Categoria[];
+    },
+  });
 
-  useEffect(() => {
-    fetchCategorias();
-  }, []);
-
-  // Criar categoria
-  const handleCriar = (categoria: Categoria) => {
-    setCategorias(prev => [...prev, categoria]);
-  };
-
-  // Atualizar categoria
-  const handleAtualizar = (categoriaAtualizada: Categoria) => {
-    setCategorias(prev =>
-      prev.map(c => (c.id === categoriaAtualizada.id ? categoriaAtualizada : c))
-    );
-  };
-
-  // Excluir categoria
-  const handleExcluir = async (id: string) => {
-    try {
-      await api.delete(`/categorias/${id}`);
-      setCategorias(prev => prev.filter(c => c.id !== id));
+  // Mutation para excluir categoria
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`http://localhost:3000/categorias/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
       toast.success('Categoria excluída com sucesso!');
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast.error('Erro ao excluir categoria', {
         description: error.response?.data?.message || error.message,
       });
+    },
+  });
+
+  // Mostrar erro se houver
+  useEffect(() => {
+    if (error) {
+      toast.error('Erro ao carregar categorias', {
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  // Criar categoria
+  const handleCriar = (_categoria: Categoria) => {
+    queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
+  };
+
+  // Atualizar categoria
+  const handleAtualizar = (_categoriaAtualizada: Categoria) => {
+    queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
+  };
+
+  // Excluir categoria
+  const handleExcluir = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
+      deleteMutation.mutate(id);
     }
   };
 
@@ -135,7 +146,7 @@ const ListarCategoria: React.FC = () => {
                     <Button
                       variant='destructive'
                       size='sm'
-                      onClick={() => handleExcluir(categoria.id)}
+                      onClick={() => categoria.id && handleExcluir(categoria.id)}
                       className='cursor-pointer'
                     >
                       Excluir

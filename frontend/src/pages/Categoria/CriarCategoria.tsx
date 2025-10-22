@@ -23,7 +23,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Categoria } from '@/type/Categoria';
-import api from '@/api/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -37,6 +38,35 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
   categoriasExistentes,
 }) => {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Mutation para criar categoria
+  const createMutation = useMutation({
+    mutationFn: async (novaCategoria: Omit<Categoria, 'id'>) => {
+      const response = await axios.post('http://localhost:3000/categorias', novaCategoria);
+      return response.data;
+    },
+    onSuccess: categoriaCriada => {
+      queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
+      onCategoriaCriada(categoriaCriada);
+      toast.success('Sucesso!', {
+        description: 'A categoria foi incluída com sucesso.',
+      });
+      form.reset({
+        descricao: '',
+        tipo: 'PRODUTO',
+        situacao: true,
+      });
+      setOpen(false);
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message || error.message || 'Não foi possível salvar a categoria.';
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
 
   const form = useForm({
     resolver: zodResolver(categoriaSchema),
@@ -47,7 +77,7 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = (data: FormValues) => {
     const descricaoNormalizada = (str: string) =>
       str
         .trim()
@@ -66,41 +96,13 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
       return;
     }
 
-    const novaCategoria: Categoria = {
+    const novaCategoria = {
       descricao: data.descricao,
       tipo: data.tipo,
       situacao: data.situacao,
     };
 
-    try {
-      // Requisição POST usando axios
-      const response = await api.post('/categorias', novaCategoria);
-
-      // Retorna a categoria criada do backend
-      const categoriaCriada = response.data;
-
-      // Atualiza a UI
-      onCategoriaCriada(categoriaCriada);
-
-      toast.success('Sucesso!', {
-        description: 'A categoria foi incluída com sucesso.',
-      });
-
-      form.reset({
-        descricao: '',
-        tipo: 'PRODUTO',
-        situacao: true,
-      });
-      setOpen(false);
-    } catch (error: any) {
-      // Axios já fornece error.response
-      const message =
-        error.response?.data?.message || error.message || 'Não foi possível salvar a categoria.';
-
-      toast.error('Erro!', {
-        description: message,
-      });
-    }
+    createMutation.mutate(novaCategoria);
   };
 
   const handleCancelar = () => {
@@ -198,10 +200,10 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
               </Button>
               <Button
                 type='submit'
-                disabled={form.formState.isSubmitting}
+                disabled={createMutation.isPending}
                 className='cursor-pointer'
               >
-                {form.formState.isSubmitting ? 'Salvando...' : 'Salvar'}
+                {createMutation.isPending ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
           </form>

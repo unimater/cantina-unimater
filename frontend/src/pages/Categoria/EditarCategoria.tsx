@@ -24,7 +24,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { categoriaSchema } from '@/lib/CategoriaSchema';
 import type { Categoria } from '@/type/Categoria';
-import api from '@/api/api';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -40,6 +41,38 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
   categoriasExistentes,
 }) => {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Mutation para atualizar categoria
+  const updateMutation = useMutation({
+    mutationFn: async (categoriaAtualizada: Categoria) => {
+      const response = await axios.patch(
+        `http://localhost:3000/categorias/${categoria.id}`,
+        categoriaAtualizada
+      );
+      return response.data;
+    },
+    onSuccess: categoriaAtualizadaDoBackend => {
+      queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
+      onCategoriaAtualizada(categoriaAtualizadaDoBackend);
+      toast.success('Sucesso!', {
+        description: 'A categoria foi atualizada com sucesso.',
+      });
+      form.reset({
+        descricao: '',
+        tipo: 'PRODUTO',
+        situacao: true,
+      });
+      setOpen(false);
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message || error.message || 'Não foi possível atualizar a categoria.';
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
 
   const form = useForm({
     resolver: zodResolver(categoriaSchema),
@@ -61,7 +94,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
     }
   }, [open, categoria.id, form]);
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = (data: FormValues) => {
     const descricaoNormalizada = (str: string) =>
       str
         .trim()
@@ -87,33 +120,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
       situacao: data.situacao,
     };
 
-    try {
-      // Requisição PATCH para atualizar a categoria no backend
-      const response = await api.patch(`/categorias/${categoria.id}`, categoriaAtualizada);
-
-      const categoriaAtualizadaDoBackend = response.data;
-
-      // Atualiza a UI
-      onCategoriaAtualizada(categoriaAtualizadaDoBackend);
-
-      toast.success('Sucesso!', {
-        description: 'A categoria foi atualizada com sucesso.',
-      });
-
-      form.reset({
-        descricao: '',
-        tipo: 'PRODUTO',
-        situacao: true,
-      });
-      setOpen(false);
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message || error.message || 'Não foi possível atualizar a categoria.';
-
-      toast.error('Erro!', {
-        description: message,
-      });
-    }
+    updateMutation.mutate(categoriaAtualizada);
   };
 
   return (
@@ -202,9 +209,9 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
               </DialogClose>
               <Button
                 type='submit'
-                disabled={form.formState.isSubmitting}
+                disabled={updateMutation.isPending}
               >
-                {form.formState.isSubmitting ? 'Atualizando...' : 'Atualizar'}
+                {updateMutation.isPending ? 'Atualizando...' : 'Atualizar'}
               </Button>
             </div>
           </form>
