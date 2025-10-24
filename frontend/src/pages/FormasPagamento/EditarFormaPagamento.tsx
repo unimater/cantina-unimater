@@ -22,15 +22,17 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import type { FormaPagamento } from './FormasPagamento';
+import type { FormaPagamento } from '@/type/FormaPagamento';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
 
 // Schema de validação
 const pagamentoSchema = z.object({
-    nome: z
+    name: z
         .string()
         .min(2, 'O nome deve ter pelo menos 2 caracteres')
         .max(150, 'O nome não pode ultrapassar 150 caracteres'),
-    ativo: z.boolean(),
+    status: z.boolean(),
 });
 
 type FormValues = z.infer<typeof pagamentoSchema>;
@@ -49,11 +51,35 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
     const [open, setOpen] = useState(false);
     const [temAlteracao, setTemAlteracao] = useState(false);
 
+    const queryClient = useQueryClient();
+
+    const updateMutation = useMutation({
+        mutationFn: async (formaPagamentoAtualizada: FormaPagamento) => {
+            const response = await api.patch(`/formas-pagamento/${formaPagamento.id}`, formaPagamentoAtualizada)
+            return response.data;
+        },
+        onSuccess: formasPagamentoAtualizadaDoBackend => {
+            queryClient.invalidateQueries({ queryKey: ['getFormasPagamento'] });
+            onFormaAtualizada(formasPagamentoAtualizadaDoBackend);
+            toast.success('Sucesso!', {
+                description: 'A Formas de Pagamento foi atualizada com sucesso.',
+            });
+            setOpen(false);
+        },
+        onError: (error: any) => {
+            const message =
+                error.response?.data?.message || error.message || 'Não foi possível atualizar a Forma de Pagamento.';
+            toast.error('Erro!', {
+                description: message,
+            });
+        },
+    });
+
     const form = useForm<FormValues>({
         resolver: zodResolver(pagamentoSchema),
         defaultValues: {
-            nome: formaPagamento.nome,
-            ativo: formaPagamento.ativo,
+            name: formaPagamento.name,
+            status: formaPagamento.status,
         },
     });
 
@@ -74,7 +100,7 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
 
         const nomeDuplicado = formasExistentes
             .filter(f => f.id !== formaPagamento.id)
-            .some(f => nomeNormalizado(f.nome) === nomeNormalizado(data.nome));
+            .some(f => nomeNormalizado(f.name) === nomeNormalizado(data.name));
 
         if (nomeDuplicado) {
             toast.error('Não foi possível salvar o registro!', {
@@ -85,15 +111,17 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
 
         const formaAtualizada: FormaPagamento = {
             ...formaPagamento,
-            nome: data.nome,
-            ativo: data.ativo,
+            name: data.name,
+            status: data.status,
         };
+
+        updateMutation.mutate(formaAtualizada)
 
         onFormaAtualizada(formaAtualizada);
         toast.success('Sucesso!', {
             description: 'A forma de pagamento foi atualizada com sucesso.',
         });
-        setOpen(false);
+        setOpen(false); 
     };
 
     return (
@@ -101,10 +129,8 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
             open={open}
             onOpenChange={isOpen => {
                 if (!isOpen && temAlteracao) {
-                    if (confirm('Você possui alterações não salvas. Deseja realmente sair?')) {
-                        setOpen(false);
-                        form.reset();
-                    }
+                    setOpen(false);
+                    form.reset();
                 } else {
                     setOpen(isOpen);
                 }
@@ -128,7 +154,7 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
 
                             <FormField
                                 control={form.control}
-                                name='nome'
+                                name='name'
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Nome *</FormLabel>
@@ -144,7 +170,7 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
                                 <FormLabel>Ativo</FormLabel>
                                 <FormField
                                     control={form.control}
-                                    name='ativo'
+                                    name='status'
                                     render={({ field }) => (
                                         <FormControl>
                                             <Switch checked={field.value} onCheckedChange={field.onChange} />

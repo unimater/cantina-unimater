@@ -22,14 +22,16 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import type { FormaPagamento } from './FormasPagamento';
+import type { FormaPagamento } from '@/type/FormaPagamento';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
 
 const pagamentoSchema = z.object({
-  nome: z
+  name: z
     .string()
     .min(2, 'O nome deve ter pelo menos 2 caracteres')
     .max(150, 'O nome não pode ultrapassar 150 caracteres'),
-  ativo: z.boolean(),
+  status: z.boolean(),
 });
 
 type FormValues = z.infer<typeof pagamentoSchema>;
@@ -45,11 +47,39 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
 
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: async (novaFormaPagamento: Omit<FormaPagamento, 'id'>) => {
+      const response = await api.post('/formas-pagamento', novaFormaPagamento);
+      return response.data;
+    },
+    onSuccess: formaPagamentoCriada => {
+      queryClient.invalidateQueries({ queryKey: ['getFormasPagamento'] });
+      onFormaCriada(formaPagamentoCriada);
+      toast.success('Sucesso!', {
+        description: 'A Forma de Pagamento foi incluída com sucesso.',
+      });
+      form.reset({
+        name: '',
+        status: true
+      });
+      setOpen(false);
+    },
+    onError: (error: any) => {
+      const message =
+        error.response?.data?.message || error.message || 'Não foi possível salvar a Forma de Pagamento.';
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
+
   const form = useForm<FormValues>({
     resolver: zodResolver(pagamentoSchema),
     defaultValues: {
-      nome: '',
-      ativo: true,
+      name: '',
+      status: true,
     },
   });
 
@@ -62,7 +92,7 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
         .replace(/[\u0300-\u036f]/g, '');
 
     const nomeDuplicado = formasExistentes.some(
-      f => nomeNormalizado(f.nome) === nomeNormalizado(data.nome)
+      f => nomeNormalizado(f.name) === nomeNormalizado(data.name)
     );
 
     if (nomeDuplicado) {
@@ -73,19 +103,17 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
     }
 
     const novaForma: FormaPagamento = {
-      id: formasExistentes.length ? Math.max(...formasExistentes.map(f => f.id)) + 1 : 1,
-      nome: data.nome.trim(),
-      ativo: data.ativo,
+      name: data.name.trim(),
+      status: data.status,
     };
+    
+    createMutation.mutate(novaForma);
 
     onFormaCriada(novaForma);
     toast.success('Sucesso!', {
       description: 'A forma de pagamento foi criada com sucesso.',
     });
-
-    form.reset();
-    setOpen(false);
-  };
+    };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,18 +127,20 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+          <form onSubmit={form.handleSubmit(onSubmit)} 
+            className='space-y-6'
+          >
             <div className='space-y-4 rounded-lg border p-4'>
               <h3 className='text-lg font-semibold'>Informações Gerais</h3>
 
               <FormField
                 control={form.control}
-                name='nome'
+                name='name'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Nome *</FormLabel>
                     <FormControl>
-                      <Input placeholder='Ex: Cartão de Crédito' {...field} />
+                      <Input placeholder='Ex: Cartão de Crédito, PIX etc...' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,7 +151,7 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
                 <FormLabel>Ativo</FormLabel>
                 <FormField
                   control={form.control}
-                  name='ativo'
+                  name='status'
                   render={({ field }) => (
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />

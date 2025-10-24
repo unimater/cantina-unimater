@@ -14,55 +14,58 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import CriarPagamento from './CriarFormaPagamento.tsx';
 import EditarFormaPagamento from './EditarFormaPagamento.tsx';
-
-export type FormaPagamento = {
-  id: number;
-  nome: string;
-  ativo: boolean;
-};
+import type { FormaPagamento } from '@/type/FormaPagamento.ts';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api.ts';
 
 const FormasPagamento: React.FC = () => {
-  const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([
-    {
-      id: 1,
-      nome: 'Cartão de Crédito',
-      ativo: true,
-    },
-    {
-      id: 2,
-      nome: 'Pix',
-      ativo: true,
-    },
-  ]);
-
   const [filtro, setFiltro] = useState('');
+  const queryClient = useQueryClient();
 
-  const handleCriar = (novaForma: FormaPagamento) => {
-    setFormasPagamento(prev => [...prev, novaForma]);
-    toast.success('Forma de pagamento criada com sucesso!');
+  const { 
+    data: formasPagamento = [], 
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['getFormasPagamento'],
+    queryFn: async () => {
+      const response = await api.get('/formas-pagamento');
+      return response.data as FormaPagamento[];
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/formas-pagamento/${id}`);
+    },
+    onSuccess: () => {
+      toast.success('Forma de pagamento excluída com sucesso!')
+      queryClient.invalidateQueries({ queryKey: ['getFormasPagamento'] });
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao excluir Formas de pagamento', {
+        description: error.response?.data?.message || error.message,
+      });
+    },  
+  });
+
+  const handleCriar = (_formaPagamento: FormaPagamento) => {
   };
 
-  const handleAtualizar = (formaAtualizada: FormaPagamento) => {
-    setFormasPagamento(prev =>
-      prev.map(f => (f.id === formaAtualizada.id ? formaAtualizada : f))
-    );
-    toast.success('Forma de pagamento atualizada!');
+  const handleAtualizar = (_formaPagamentoAtualizada: FormaPagamento) => {
   };
 
-  const handleExcluir = (id: number) => {
-    if (
-      confirm(
-        'Ao excluir o item não será possível reverter. Deseja realmente prosseguir com a ação?'
-      )
-    ) {
-      setFormasPagamento(prev => prev.filter(f => f.id !== id));
-      toast.success('Excluído', { description: 'A forma de pagamento foi removida com sucesso.' });
-    }
+  const handleExcluir = (id: string) => {
+    deleteMutation.mutate(id);
   };
 
-  const formasFiltradas = formasPagamento.filter(f =>
-    f.nome.toLowerCase().includes(filtro.toLowerCase())
+  const formasFiltradas = formasPagamento.filter(c =>
+    c.name?.toLowerCase().includes(filtro.toLowerCase())
   );
+
+  
+
 
   return (
     <Card>
@@ -84,54 +87,64 @@ const FormasPagamento: React.FC = () => {
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Nome</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead className='text-right'>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {formasFiltradas.length > 0 ? (
-              formasFiltradas.map(forma => (
+        {isLoading ? (
+          <div className="text-center text-muted-foreground py-6">
+            Carregando formas de pagamento...
+          </div>
+        ) : isError ? (
+          <div className="text-center text-destructive py-6">
+            Erro ao carregar as formas de pagamento.  
+            <br />
+            {error instanceof Error ? error.message : 'Tente novamente mais tarde.'}
+          </div>
+        ) : formasFiltradas.length === 0 ? (
+          <div className="text-center text-muted-foreground py-6">
+            Não existe uma forma de pagamento com esses caracteres.
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Nome</TableHead>
+                <TableHead>Situação</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {formasFiltradas.map((forma) => (
                 <TableRow key={forma.id}>
-                  <TableCell className='font-mono text-sm'>{forma.id}</TableCell>
-                  <TableCell>{forma.nome}</TableCell>
+                  <TableCell className="font-mono text-sm">{forma.id}</TableCell>
+                  <TableCell>{forma.name}</TableCell>
                   <TableCell>
                     <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${forma.ativo ? 'bg-green-500' : 'bg-red-500'
-                        }`}
+                      className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                        forma.status ? 'bg-green-500' : 'bg-red-500'
+                      }`}
                     />
-                    {forma.ativo ? 'Ativo' : 'Inativo'}
+                    {forma.status ? 'Ativo' : 'Inativo'}
                   </TableCell>
-                  <TableCell className='space-x-2 text-right'>
+                  <TableCell className="space-x-2 text-right">
                     <EditarFormaPagamento
                       formaPagamento={forma}
                       onFormaAtualizada={handleAtualizar}
                       formasExistentes={formasPagamento}
                     />
                     <Button
-                      variant='destructive'
-                      size='sm'
-                      onClick={() => handleExcluir(forma.id)}
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => forma.id && handleExcluir(forma.id)}
                     >
                       Excluir
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} className='text-muted-foreground py-6 text-center'>
-                  Nenhuma forma de pagamento encontrada.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );
