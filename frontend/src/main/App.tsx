@@ -10,69 +10,76 @@ import ListarDespesas from '@/pages/Despesas/ListarDespesas';
 import FormasPagamento from '@/pages/FormasPagamento/FormasPagamento';
 import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
 
 function App() {
-  return (
-    <Routes>
-      <Route
-        path='/login'
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path='/esq-senha'
-        element={
-          <PublicRoute>
-            <EsqSenha />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path='/'
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route
-          index
-          element={<Dashboard />}
-        />
-        <Route
-          path='usuarios'
-          element={<ListarUsuarios />}
-        />
-        <Route
-          path='despesas'
-          element={<ListarDespesas />}
-        />
-        <Route
-          path='formas-pagamento'
-          element={<FormasPagamento />}
-        />
-        <Route
-          path='categorias'
-          element={<CategoriasPage />}
-        />
-        <Route
-          path='produtos'
-          element={<ListarProdutos />}
-        />
-      </Route>
+  const queryClient = new QueryClient();
 
-      <Route
-        path='/'
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-    </Routes>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Toaster />
+      <Routes>
+        <Route
+          path='/login'
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/esq-senha'
+          element={
+            <PublicRoute>
+              <EsqSenha />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path='/'
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route
+            index
+            element={<Dashboard />}
+          />
+          <Route
+            path='usuarios'
+            element={<ListarUsuarios />}
+          />
+          <Route
+            path='despesas'
+            element={<ListarDespesas />}
+          />
+          <Route
+            path='formas-pagamento'
+            element={<FormasPagamento />}
+          />
+          <Route
+            path='categorias'
+            element={<CategoriasPage />}
+          />
+          <Route
+            path='produtos'
+            element={<ListarProdutos />}
+          />
+        </Route>
+
+        <Route
+          path='/'
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+      </Routes>
+    </QueryClientProvider>
   );
 }
 

@@ -12,6 +12,9 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 export function Login() {
   const [email, setEmail] = useState('');
@@ -19,24 +22,40 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const mutation = useMutation({
+    mutationFn: () => {
+      return axios.post('http://localhost:3000/sessions', { username: email, password });
+    },
+    onSuccess: () => {
+      toast('Login realizado com sucesso.', {
+        description: 'Redirecionando para a página de usuários...',
+      });
+
+      const userData = {
+        id: 1,
+        email: email,
+        nome: 'Usuário Teste',
+        usuario: email,
+        situacao: true,
+        senha: '',
+      };
+
+      authUtils.setUser(userData);
+
+      navigate('/usuarios');
+    },
+    onError: (data: { response: { data: { message: string } } }) => {
+      toast.error(data.response.data.message || 'Erro ao fazer login. Verifique suas credenciais.');
+    },
+  });
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       if (email && password) {
-        const userData = {
-          id: 1,
-          email: email,
-          nome: 'Usuário Teste',
-          usuario: email,
-          situacao: true,
-          senha: '',
-        };
-
-        authUtils.setUser(userData);
-
-        navigate('/usuarios');
+        mutation.mutate();
       } else {
         alert('Por favor, preencha email e senha');
       }
