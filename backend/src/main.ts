@@ -20,7 +20,6 @@ async function bootstrap() {
   });
 
   const configService = app.get<ConfigService<Env, true>>(ConfigService);
-  app.enableCors({origin: 'http://127.0.0.1:8080',});
   const port = configService.get('PORT', { infer: true });
 
   app.enableCors({
