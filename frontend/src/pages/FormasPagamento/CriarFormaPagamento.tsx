@@ -110,10 +110,7 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
     createMutation.mutate(novaForma);
 
     onFormaCriada(novaForma);
-    toast.success('Sucesso!', {
-      description: 'A forma de pagamento foi criada com sucesso.',
-    });
-    };
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

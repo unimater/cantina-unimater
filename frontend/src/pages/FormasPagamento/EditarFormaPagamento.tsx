@@ -118,9 +118,6 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({
         updateMutation.mutate(formaAtualizada)
 
         onFormaAtualizada(formaAtualizada);
-        toast.success('Sucesso!', {
-            description: 'A forma de pagamento foi atualizada com sucesso.',
-        });
         setOpen(false); 
     };
 

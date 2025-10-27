@@ -64,9 +64,6 @@ const FormasPagamento: React.FC = () => {
     c.name?.toLowerCase().includes(filtro.toLowerCase())
   );
 
-  
-
-
   return (
     <Card>
       <CardHeader>
@@ -89,62 +86,46 @@ const FormasPagamento: React.FC = () => {
       </CardHeader>
 
       <CardContent>
-        {isLoading ? (
-          <div className="text-center text-muted-foreground py-6">
-            Carregando formas de pagamento...
-          </div>
-        ) : isError ? (
-          <div className="text-center text-destructive py-6">
-            Erro ao carregar as formas de pagamento.  
-            <br />
-            {error instanceof Error ? error.message : 'Tente novamente mais tarde.'}
-          </div>
-        ) : formasFiltradas.length === 0 ? (
-          <div className="text-center text-muted-foreground py-6">
-            Não existe uma forma de pagamento com esses caracteres.
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Situação</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Situação</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {formasFiltradas.map((forma) => (
+              <TableRow key={forma.id}>
+                <TableCell className="font-mono text-sm">{forma.id}</TableCell>
+                <TableCell>{forma.name}</TableCell>
+                <TableCell>
+                  <span
+                    className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                      forma.status ? 'bg-green-500' : 'bg-red-500'
+                    }`}
+                  />
+                  {forma.status ? 'Ativo' : 'Inativo'}
+                </TableCell>
+                <TableCell className="space-x-2 text-right">
+                  <EditarFormaPagamento
+                    formaPagamento={forma}
+                    onFormaAtualizada={handleAtualizar}
+                    formasExistentes={formasPagamento}
+                  />
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => forma.id && handleExcluir(forma.id)}
+                  >
+                    Excluir
+                  </Button>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {formasFiltradas.map((forma) => (
-                <TableRow key={forma.id}>
-                  <TableCell className="font-mono text-sm">{forma.id}</TableCell>
-                  <TableCell>{forma.name}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                        forma.status ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                    />
-                    {forma.status ? 'Ativo' : 'Inativo'}
-                  </TableCell>
-                  <TableCell className="space-x-2 text-right">
-                    <EditarFormaPagamento
-                      formaPagamento={forma}
-                      onFormaAtualizada={handleAtualizar}
-                      formasExistentes={formasPagamento}
-                    />
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => forma.id && handleExcluir(forma.id)}
-                    >
-                      Excluir
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
