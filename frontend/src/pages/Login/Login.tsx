@@ -26,7 +26,7 @@ export function Login() {
     mutationFn: () => {
       return axios.post('http://localhost:3000/sessions', { username: email, password });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast('Login realizado com sucesso.', {
         description: 'Redirecionando para a página de usuários...',
       });
@@ -40,7 +40,7 @@ export function Login() {
         senha: '',
       };
 
-      authUtils.setUser(userData);
+      authUtils.setUser(userData, data.data.access_token);
 
       navigate('/usuarios');
     },
