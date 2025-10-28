@@ -26,20 +26,11 @@ export const authUtils = {
     }
   },
 
-  setUser(userData: Usuario, token: string): void {
+  setUser(userData: Usuario): void {
     localStorage.setItem('user', JSON.stringify(userData));
-    this.setToken(token)
   },
 
   removeUser(): void {
     localStorage.removeItem('user');
   },
-
-  getToken(): string | null {
-    return localStorage.getItem('access_token');
-  },
-
-  setToken(token: string): void {
-    localStorage.setItem('access_token', token)
-  }
 };
