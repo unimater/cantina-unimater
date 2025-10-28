@@ -17,30 +17,27 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 export function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const mutation = useMutation({
     mutationFn: () => {
-      return axios.post('http://localhost:3000/sessions', { username: email, password });
+      return axios.post('http://localhost:3000/sessions', { username, password });
     },
     onSuccess: () => {
       toast('Login realizado com sucesso.', {
         description: 'Redirecionando para a página de usuários...',
       });
 
-      const userData = {
+      authUtils.setUser({
         id: 1,
-        email: email,
         nome: 'Usuário Teste',
-        usuario: email,
+        usuario: username,
         situacao: true,
         senha: '',
-      };
-
-      authUtils.setUser(userData);
+      });
 
       navigate('/usuarios');
     },
@@ -54,10 +51,10 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      if (email && password) {
+      if (username && password) {
         mutation.mutate();
       } else {
-        alert('Por favor, preencha email e senha');
+        alert('Por favor, preencha username e senha');
       }
     } catch (error) {
       console.error('Erro no login:', error);
@@ -66,13 +63,14 @@ export function Login() {
       setIsLoading(false);
     }
   };
+
   return (
     <div className='flex min-h-svh flex-col items-center justify-center'>
       <Card className='w-full max-w-sm'>
         <CardHeader>
           <CardTitle className='text-center'>Login</CardTitle>
           <CardDescription className='text-center'>
-            Insira seu email e senha abaixo para entrar
+            Insira seu nome de usuário e senha abaixo para entrar
           </CardDescription>
         </CardHeader>
 
@@ -80,13 +78,13 @@ export function Login() {
           <form onSubmit={handleLogin}>
             <div className='flex flex-col gap-6'>
               <div className='grid gap-2'>
-                <Label htmlFor='email'>Email</Label>
+                <Label htmlFor='username'>Nome de Usuário</Label>
                 <Input
-                  id='email'
-                  type='email'
-                  placeholder='email@example.com'
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  id='username'
+                  type='text'
+                  placeholder='Digite seu nome de usuário'
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
                   required
                 />
               </div>
@@ -104,6 +102,7 @@ export function Login() {
                   id='password'
                   type='password'
                   value={password}
+                  placeholder='************'
                   onChange={e => setPassword(e.target.value)}
                   required
                 />

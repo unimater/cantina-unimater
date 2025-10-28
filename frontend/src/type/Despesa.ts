@@ -1,7 +1,10 @@
 export interface Despesa {
-  id: number;
+  createdAt: string;
+  data: string;
   descricao: string;
-  categoria: string;
-  data?: string;
-  usuario: string;
+  fornecedor: string;
+  id: string;
+  observacoes: string;
+  updatedAt: string;
+  valor: string;
 }
