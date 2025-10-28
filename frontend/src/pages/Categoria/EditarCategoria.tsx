@@ -43,7 +43,6 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Mutation para atualizar categoria
   const updateMutation = useMutation({
     mutationFn: async (categoriaAtualizada: Categoria) => {
       const response = await axios.patch(
@@ -65,9 +64,8 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
       });
       setOpen(false);
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message || error.message || 'Não foi possível atualizar a categoria.';
+    onError: (error: { response: { data: { message: string } } }) => {
+      const message = error.response?.data?.message || 'Não foi possível atualizar a categoria.';
       toast.error('Erro!', {
         description: message,
       });
@@ -83,7 +81,6 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
     },
   });
 
-  // Reset form quando abrir
   useEffect(() => {
     if (open) {
       form.reset({
@@ -92,7 +89,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
         situacao: categoria.situacao ?? true,
       });
     }
-  }, [open, categoria.id, form]);
+  }, [open, categoria.id, form, categoria]);
 
   const onSubmit = (data: FormValues) => {
     const descricaoNormalizada = (str: string) =>
@@ -103,7 +100,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
         .replace(/[\u0300-\u036f]/g, '');
 
     const descricaoDuplicada = categoriasExistentes
-      .filter(c => c.id !== categoria.id) // ignora a própria categoria
+      .filter(c => c.id !== categoria.id)
       .some(c => descricaoNormalizada(c.descricao) === descricaoNormalizada(data.descricao));
 
     if (descricaoDuplicada) {

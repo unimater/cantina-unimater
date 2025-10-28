@@ -40,7 +40,6 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // Mutation para criar categoria
   const createMutation = useMutation({
     mutationFn: async (novaCategoria: Omit<Categoria, 'id'>) => {
       const response = await axios.post('http://localhost:3000/categorias', novaCategoria);
@@ -59,9 +58,9 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
       });
       setOpen(false);
     },
-    onError: (error: any) => {
-      const message =
-        error.response?.data?.message || error.message || 'Não foi possível salvar a categoria.';
+    onError: (error: { response: { data: { message: string } } }) => {
+      const message = error.response?.data?.message || 'Não foi possível atualizar a categoria.';
+
       toast.error('Erro!', {
         description: message,
       });

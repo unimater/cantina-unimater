@@ -31,7 +31,6 @@ const ListarCategoria: React.FC = () => {
     },
   });
 
-  // Mutation para excluir categoria
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await axios.delete(`http://localhost:3000/categorias/${id}`);
@@ -40,14 +39,13 @@ const ListarCategoria: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
       toast.success('Categoria excluída com sucesso!');
     },
-    onError: (error: any) => {
+    onError: (error: { response: { data: { message: string } } }) => {
       toast.error('Erro ao excluir categoria', {
-        description: error.response?.data?.message || error.message,
+        description: error.response?.data?.message || 'Não foi possível atualizar a categoria.',
       });
     },
   });
 
-  // Mostrar erro se houver
   useEffect(() => {
     if (error) {
       toast.error('Erro ao carregar categorias', {
@@ -56,17 +54,14 @@ const ListarCategoria: React.FC = () => {
     }
   }, [error]);
 
-  // Criar categoria
-  const handleCriar = (_categoria: Categoria) => {
+  const handleCriar = () => {
     queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
   };
 
-  // Atualizar categoria
-  const handleAtualizar = (_categoriaAtualizada: Categoria) => {
+  const handleAtualizar = () => {
     queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
   };
 
-  // Excluir categoria
   const handleExcluir = (id: string) => {
     if (confirm('Tem certeza que deseja excluir esta categoria?')) {
       deleteMutation.mutate(id);
@@ -104,7 +99,6 @@ const ListarCategoria: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Situação</TableHead>
@@ -115,7 +109,6 @@ const ListarCategoria: React.FC = () => {
             {categoriasFiltradas.length > 0 ? (
               categoriasFiltradas.map(categoria => (
                 <TableRow key={`categoria-${categoria.id}`}>
-                  <TableCell className='font-mono text-sm'>{categoria.id}</TableCell>
                   <TableCell>{categoria.descricao}</TableCell>
                   <TableCell>
                     <span
