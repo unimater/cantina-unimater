@@ -17,34 +17,27 @@ import axios from 'axios';
 import { toast } from 'sonner';
 
 export function Login() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const mutation = useMutation({
-    mutationFn: async () => {
-      const response = await axios.post('http://localhost:3000/sessions', {
-        username: email,
-        password,
-      });
-      return response.data;
+    mutationFn: () => {
+      return axios.post('http://localhost:3000/sessions', { username, password });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast('Login realizado com sucesso.', {
-        description: 'Redirecionando para a área de usuários...',
+        description: 'Redirecionando para a página de usuários...',
       });
 
-      const userData = {
+      authUtils.setUser({
         id: 1,
-        email: email,
         nome: 'Usuário Teste',
-        usuario: email,
+        usuario: username,
         situacao: true,
         senha: '',
-      };
-
-      authUtils.setUser(userData);
+      });
 
       navigate('/usuarios');
     },
@@ -57,14 +50,18 @@ export function Login() {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!email || !password) {
-      toast.error('Por favor, preencha email e senha.');
+    try {
+      if (username && password) {
+        mutation.mutate();
+      } else {
+        alert('Por favor, preencha username e senha');
+      }
+    } catch (error) {
+      console.error('Erro no login:', error);
+      alert('Erro ao fazer login');
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    mutation.mutate();
-    setIsLoading(false);
   };
 
   return (
@@ -73,7 +70,7 @@ export function Login() {
         <CardHeader>
           <CardTitle className='text-center'>Login</CardTitle>
           <CardDescription className='text-center'>
-            Insira seu email e senha abaixo para entrar
+            Insira seu nome de usuário e senha abaixo para entrar
           </CardDescription>
         </CardHeader>
 
@@ -81,17 +78,16 @@ export function Login() {
           <form onSubmit={handleLogin}>
             <div className='flex flex-col gap-6'>
               <div className='grid gap-2'>
-                <Label htmlFor='email'>Email</Label>
+                <Label htmlFor='username'>Nome de Usuário</Label>
                 <Input
-                  id='email'
-                  type='email'
-                  placeholder='email@example.com'
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id='username'
+                  type='text'
+                  placeholder='Digite seu nome de usuário'
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
                   required
                 />
               </div>
-
               <div className='grid gap-2'>
                 <div className='flex items-center'>
                   <Label htmlFor='password'>Senha</Label>
@@ -106,7 +102,8 @@ export function Login() {
                   id='password'
                   type='password'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder='************'
+                  onChange={e => setPassword(e.target.value)}
                   required
                 />
               </div>
