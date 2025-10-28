@@ -1,15 +1,12 @@
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from '@/components/ui/dialog';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -20,11 +17,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useState } from 'react';
-import { toast } from 'sonner';
 import type { FormaPagamento } from '@/type/FormaPagamento';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/api/api';
+import axios from 'axios';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 const pagamentoSchema = z.object({
   name: z
@@ -36,39 +36,33 @@ const pagamentoSchema = z.object({
 
 type FormValues = z.infer<typeof pagamentoSchema>;
 
-interface CriarPagamentoProps {
-  onFormaCriada: (novaForma: FormaPagamento) => void;
-  formasExistentes: FormaPagamento[];
-}
-
-const CriarPagamento: React.FC<CriarPagamentoProps> = ({
-  onFormaCriada,
-  formasExistentes,
-}) => {
+const CriarPagamento = () => {
   const [open, setOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
     mutationFn: async (novaFormaPagamento: Omit<FormaPagamento, 'id'>) => {
-      const response = await api.post('/formas-pagamento', novaFormaPagamento);
+      const response = await axios.post(
+        'http://localhost:3000/formas-pagamento',
+        novaFormaPagamento
+      );
       return response.data;
     },
-    onSuccess: formaPagamentoCriada => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['getFormasPagamento'] });
-      onFormaCriada(formaPagamentoCriada);
       toast.success('Sucesso!', {
         description: 'A Forma de Pagamento foi incluída com sucesso.',
       });
       form.reset({
         name: '',
-        status: true
+        status: true,
       });
       setOpen(false);
     },
-    onError: (error: any) => {
+    onError: (error: { response: { data: { message: string } } }) => {
       const message =
-        error.response?.data?.message || error.message || 'Não foi possível salvar a Forma de Pagamento.';
+        error.response?.data?.message || 'Não foi possível salvar a Forma de Pagamento.';
       toast.error('Erro!', {
         description: message,
       });
@@ -84,36 +78,19 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
   });
 
   const onSubmit = (data: FormValues) => {
-    const nomeNormalizado = (str: string) =>
-      str
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-    const nomeDuplicado = formasExistentes.some(
-      f => nomeNormalizado(f.name) === nomeNormalizado(data.name)
-    );
-
-    if (nomeDuplicado) {
-      toast.error('Não foi possível criar o registro!', {
-        description: 'Já existe uma forma de pagamento com o mesmo nome.',
-      });
-      return;
-    }
-
     const novaForma: FormaPagamento = {
       name: data.name.trim(),
       status: data.status,
     };
-    
-    createMutation.mutate(novaForma);
 
-    onFormaCriada(novaForma);
+    createMutation.mutate(novaForma);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+    >
       <DialogTrigger asChild>
         <Button>Nova Forma de Pagamento</Button>
       </DialogTrigger>
@@ -124,7 +101,8 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} 
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
             className='space-y-6'
           >
             <div className='space-y-4 rounded-lg border p-4'>
@@ -137,7 +115,10 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
                   <FormItem>
                     <FormLabel>Nome *</FormLabel>
                     <FormControl>
-                      <Input placeholder='Ex: Cartão de Crédito, PIX etc...' {...field} />
+                      <Input
+                        placeholder='Ex: Cartão de Crédito, PIX etc...'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +132,10 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
                   name='status'
                   render={({ field }) => (
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   )}
                 />
@@ -172,7 +156,10 @@ const CriarPagamento: React.FC<CriarPagamentoProps> = ({
                 </Button>
               </DialogClose>
 
-              <Button type='submit' disabled={form.formState.isSubmitting}>
+              <Button
+                type='submit'
+                disabled={form.formState.isSubmitting}
+              >
                 {form.formState.isSubmitting ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
