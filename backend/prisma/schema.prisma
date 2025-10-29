@@ -9,14 +9,18 @@ datasource db {
 }
 
 model Produto {
-    id          String    @id @default(cuid())
-    descricao   String
-    valor       Decimal
-    situacao    Boolean
-    imagem      String?
+    id                      String    @id @default(cuid())
+    descricao               String
+    valor                   Decimal
+    situacao                Boolean
+    imagem                  String?
+    quantidadeEstoque       Decimal @default(0)
+    estoqueMinimo           Decimal @default(0)
 
     categoria   Categoria @relation(fields: [categoriaId], references: [id])  
-    categoriaId String    @map("categoria_id") 
+    categoriaId String    @map("categoria_id")
+
+    movimentacaoEstoque MovimentacaoEstoque[]
     
     createdAt   DateTime  @default(now()) @map("created_at")
     updatedAt   DateTime? @updatedAt @map("updated_at")
@@ -61,8 +65,11 @@ model User {
   phone        String?      @db.VarChar(20)
   active       Boolean      @default(true)
 
+  movimentacaoEstoque MovimentacaoEstoque[]
+
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
+
 
   resetToken       String?     
   resetTokenExpiry DateTime?   
@@ -75,4 +82,29 @@ model formasPagamento {
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+model MovimentacaoEstoque {
+  id                String @id @default(cuid())
+
+  produto           Produto @relation(fields: [produtoId], references: [id])
+  produtoId         String @map("produtoId")
+
+  usuario           User @relation(fields: [usuarioId], references: [id])
+  usuarioId         String @map("usuarioId")
+
+  tipo              TipoMovimentacao
+  motivo            String @db.VarChar(255)
+  quantidade        Decimal @db.Decimal(15, 2)
+  estoqueAnterior   Decimal @db.Decimal(15, 2)
+  estoqueAtual      Decimal @db.Decimal(15, 2)
+  observacoes       String? @db.VarChar(255)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @updatedAt
 }
