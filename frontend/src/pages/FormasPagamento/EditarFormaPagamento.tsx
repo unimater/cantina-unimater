@@ -1,59 +1,190 @@
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
-import { toast } from 'sonner'
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import type { FormaPagamento } from '@/type/FormaPagamento';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
-interface FormaPagamento {
-    id: number
-    nome: string
-    situacao: boolean
+// Schema de validação
+const pagamentoSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'O nome deve ter pelo menos 2 caracteres')
+    .max(150, 'O nome não pode ultrapassar 150 caracteres'),
+  status: z.boolean(),
+});
+
+type FormValues = z.infer<typeof pagamentoSchema>;
+
+interface EditarPagamentoProps {
+  formaPagamento: FormaPagamento;
 }
 
-interface EditarFormaPagamentoProps {
-    forma: FormaPagamento | null
-    onAtualizado: (id: number, dados: Partial<FormaPagamento>) => void
-    onFechar: () => void
-}
+const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({ formaPagamento }) => {
+  const [open, setOpen] = useState(false);
+  const [temAlteracao, setTemAlteracao] = useState(false);
 
-export default function EditarFormaPagamento({ forma, onAtualizado, onFechar }: EditarFormaPagamentoProps) {
-    const [nome, setNome] = useState('')
-    const [situacao, setSituacao] = useState(true)
+  const queryClient = useQueryClient();
 
-    useEffect(() => {
-        if (forma) {
-            setNome(forma.nome)
-            setSituacao(forma.situacao)
+  const updateMutation = useMutation({
+    mutationFn: async (formaPagamentoAtualizada: FormaPagamento) => {
+      const response = await axios.patch(
+        `http://localhost:3000/formas-pagamento/${formaPagamento.id}`,
+        formaPagamentoAtualizada
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getFormasPagamento'] });
+
+      toast.success('Sucesso!', {
+        description: 'A Formas de Pagamento foi atualizada com sucesso.',
+      });
+      setOpen(false);
+    },
+    onError: (error: { response: { data: { message: string } } }) => {
+      const message =
+        error.response?.data?.message || 'Não foi possível atualizar a Forma de Pagamento.';
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(pagamentoSchema),
+    defaultValues: {
+      name: formaPagamento.name,
+      status: formaPagamento.status,
+    },
+  });
+
+  const campos = form.watch();
+
+  useEffect(() => {
+    const tem = Object.values(campos).some(v => v !== '');
+    setTemAlteracao(tem);
+  }, [campos]);
+
+  const onSubmit = (data: FormValues) => {
+    const formaAtualizada: FormaPagamento = {
+      ...formaPagamento,
+      name: data.name,
+      status: data.status,
+    };
+
+    updateMutation.mutate(formaAtualizada);
+
+    setOpen(false);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={isOpen => {
+        if (!isOpen && temAlteracao) {
+          setOpen(false);
+          form.reset();
+        } else {
+          setOpen(isOpen);
         }
-    }, [forma])
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          variant='outline'
+          size='sm'
+        >
+          Editar
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='max-h-screen max-w-md overflow-y-auto'>
+        <DialogHeader>
+          <DialogTitle>Editar Forma de Pagamento</DialogTitle>
+        </DialogHeader>
 
-    if (!forma) return null
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='space-y-6'
+          >
+            <div className='space-y-4 rounded-lg border p-4'>
+              <h3 className='text-lg font-semibold'>Identificação</h3>
+              <p className='text-muted-foreground text-sm'>ID: {formaPagamento.id}</p>
 
-    const handleAtualizar = () => {
-        if (!nome.trim()) {
-            toast.error('O nome não pode ser vazio')
-            return
-        }
-        onAtualizado(forma.id, { nome, situacao })
-        onFechar()
-    }
+              <FormField
+                control={form.control}
+                name='name'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-    return (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-            <div className='bg-white p-6 rounded-lg w-[400px]'>
-                <h2 className='text-xl font-bold mb-4'>Editar Forma de Pagamento</h2>
-                <div className='flex flex-col gap-4'>
-                    <Input value={nome} onChange={e => setNome(e.target.value)} placeholder='Nome' />
-                    <div className='flex items-center gap-2'>
-                        <Switch checked={situacao} onCheckedChange={setSituacao} />
-                        <span>{situacao ? 'Ativo' : 'Inativo'}</span>
-                    </div>
-                </div>
-                <div className='flex justify-end gap-2 mt-6'>
-                    <Button variant='outline' onClick={onFechar}>Cancelar</Button>
-                    <Button onClick={handleAtualizar}>Salvar</Button>
-                </div>
+              <div className='flex items-center gap-2'>
+                <FormLabel>Ativo</FormLabel>
+                <FormField
+                  control={form.control}
+                  name='status'
+                  render={({ field }) => (
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  )}
+                />
+              </div>
             </div>
-        </div>
-    )
-}
+
+            <div className='flex justify-end gap-2 pt-4'>
+              <DialogClose asChild>
+                <Button
+                  type='button'
+                  variant='outline'
+                >
+                  Cancelar
+                </Button>
+              </DialogClose>
+              <Button
+                type='submit'
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? 'Atualizando...' : 'Atualizar'}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default EditarFormaPagamento;
