@@ -26,26 +26,49 @@ import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
 import { Plus } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
+import type { Categoria } from '@/type/Categoria';
 
 type FormValues = z.infer<typeof produtoSchema>;
 
 interface CriarProdutoProps {
-  onProdutoCriado: (produto: Produto) => void;
   produtosExistentes: Produto[];
 }
 
-const categorias = [
-  { id: '1', nome: 'Salgados' },
-  { id: '2', nome: 'Bebidas' },
-  { id: '3', nome: 'Doces' },
-];
-
 const CriarProduto: React.FC<CriarProdutoProps> = ({
-  onProdutoCriado,
   produtosExistentes,
 }) => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const queryClient = useQueryClient()
+  
+  const { data: categorias, isLoading: categoriasLoading } = useQuery({
+    queryKey: ['categorias'],
+    queryFn: async () => {
+      const response = await api.get<Categoria[]>('/categorias');
+      return response.data;
+    },
+    enabled: open
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (produto: Produto) => {
+      return api.post('/produtos', { 
+        descricao: produto.descricao,
+        valor: produto.valor,
+        situacao: produto.situacao,
+        categoriaId: produto.categoria.id
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getProdutos'] })
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || 'Erro ao criar produto.');
+    }
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(produtoSchema),
@@ -66,21 +89,25 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
       toast.error('Já existe um produto com esse nome!');
       return;
     }
+    
+    const categoriaSelecionada = categorias?.find(c => c.id === data.categoriaId);
 
-    const categoriaSelecionada = categorias.find(c => c.id === data.categoriaId)!;
+    if (!categoriaSelecionada) {
+      toast.error('Selecione uma categoria válida!');
+      return;
+    }
 
     const novoProduto: Produto = {
-      id: Date.now(),
+      id: null,
       descricao: data.nome.trim(),
       valor: data.valor,
       situacao: data.situacao,
       createdAt: new Date().toISOString(),
       updatedAt: '',
-      categoria: categoriaSelecionada
+      categoria: categoriaSelecionada!
     };
 
-    onProdutoCriado(novoProduto);
-    toast.success('Produto criado com sucesso!');
+    createMutation.mutate(novoProduto)
     form.reset();
     setOpen(false);
   };
@@ -136,17 +163,23 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
                   <FormControl>
-                    <select
-                      {...field}
-                      className="border rounded-md px-3 py-2 w-full"
-                    >
-                      <option value={0}>Selecione uma categoria</option>
-                      {categorias.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.nome}
-                        </option>
-                      ))}
-                    </select>
+                    {categoriasLoading ? (
+                      <Input placeholder="Carregando categorias..." disabled />
+                    ) : (
+                      <select
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="border rounded-md px-3 py-2 w-full"
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categorias?.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.descricao}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>

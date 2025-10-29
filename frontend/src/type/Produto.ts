@@ -1,7 +1,7 @@
 import type { Categoria } from "./Categoria";
 
 export interface Produto {
-  id: number;
+  id: string | null;
   descricao: string;
   valor: number;
   situacao: boolean;
