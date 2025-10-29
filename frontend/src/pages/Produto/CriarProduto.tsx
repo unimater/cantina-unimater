@@ -26,23 +26,23 @@ import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
 import { Plus } from 'lucide-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/api/api';
 import type { Categoria } from '@/type/Categoria';
 
 type FormValues = z.infer<typeof produtoSchema>;
 
 interface CriarProdutoProps {
-  onProdutoCriado: (produto: Produto) => void;
   produtosExistentes: Produto[];
 }
 
 const CriarProduto: React.FC<CriarProdutoProps> = ({
-  onProdutoCriado,
   produtosExistentes,
 }) => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const queryClient = useQueryClient()
   
   const { data: categorias, isLoading: categoriasLoading } = useQuery({
     queryKey: ['categorias'],
@@ -62,9 +62,8 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
         categoriaId: produto.categoria.id
       });
     },
-    onSuccess: (data) => {
-      const produtoCriado: Produto = data.data.produto ?? data.data; 
-      onProdutoCriado(produtoCriado);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getProdutos'] })
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Erro ao criar produto.');

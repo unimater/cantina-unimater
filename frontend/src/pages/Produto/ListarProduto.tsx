@@ -48,14 +48,6 @@ const ListarProdutos: React.FC = () => {
     [produtos, filtro]
   );
 
-  const handleCriar = (novo: Produto) => {
-    setProdutos((prev) => [...prev, novo]);
-  };
-
-  const handleAtualizar = (atual: Produto) => {
-    setProdutos((prev) => prev.map((p) => (p.id === atual.id ? atual : p)));
-  };
-
   const handleExcluir = (id: string) => {
     if (!confirm('Deseja realmente excluir este produto?')) return;
 
@@ -82,7 +74,7 @@ const ListarProdutos: React.FC = () => {
               className="pl-9 w-64"
             />
           </div>
-          <CriarProduto onProdutoCriado={handleCriar} produtosExistentes={produtos} />
+          <CriarProduto produtosExistentes={produtos} />
         </div>
       </CardHeader>
 
@@ -136,7 +128,6 @@ const ListarProdutos: React.FC = () => {
                     <div className="flex justify-end gap-2">
                       <EditarProduto
                         produto={p}
-                        onProdutoAtualizado={handleAtualizar}
                         produtosExistentes={produtos}
                       />
                       <Button

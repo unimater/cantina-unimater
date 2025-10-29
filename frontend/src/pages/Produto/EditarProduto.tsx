@@ -27,24 +27,24 @@ import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
 import { PencilLine } from 'lucide-react';
 import type { Categoria } from '@/type/Categoria';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/api/api';
 
 type FormValues = z.infer<typeof produtoSchema>;
 
 interface EditarProdutoProps {
   produto: Produto;
-  onProdutoAtualizado: (produto: Produto) => void;
   produtosExistentes: Produto[];
 }
 
 const EditarProduto: React.FC<EditarProdutoProps> = ({
   produto,
-  onProdutoAtualizado,
   produtosExistentes,
 }) => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const queryClient = useQueryClient()
   
   const { data: categorias, isLoading: categoriasLoading } = useQuery({
     queryKey: ['categorias'],
@@ -64,8 +64,8 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
         categoriaId: produto.categoria.id
        });
     },
-    onSuccess: (data) => {
-      onProdutoAtualizado(data.data)
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getProdutos'] })
     },
     onError: (data: { response: { data: { message: string } } }) => {
       toast.error(data.response.data.message || 'Erro ao criar produto.');
