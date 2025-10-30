@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateMovimentacaoEstoqueDto } from './dto/create-movimentacao-estoque.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { gt } from 'zod';
 
 @Injectable()
 export class MovimentacaoEstoqueService {
@@ -85,8 +86,41 @@ export class MovimentacaoEstoqueService {
     if (filtros.tipo) where.tipo = filtros.tipo;
     if (filtros.produtoId) where.produtoId = filtros.produtoId;
     if (filtros.usuarioId) where.usuarioId = filtros.usuarioId;
+    if (filtros.dataInicio || filtros.dataFim) {
+    where.createdAt = {};
+
+    if (filtros.dataInicio)
+      where.createdAt.gte = new Date(filtros.dataInicio);
+    if (filtros.dataFim)
+      where.createdAt.lte = new Date(filtros.dataFim);
+
+    console.log(`${filtros.dataInicio} - ${filtros.dataFim}`);
+  }
+
 
     return this.prismaService.movimentacaoEstoque.findMany({
+      select: {
+        id: true,
+        tipo: true,
+        motivo: true,
+        quantidade: true,
+        estoqueAnterior: true,
+        estoqueAtual: true,
+        observacoes: true,
+        createdAt: true,
+        produto: {
+          select: {
+            id: true,
+            descricao: true,
+          },
+        },
+        usuario: {
+          select: {
+            id: true,
+            name: true
+          },
+        },
+      },
       where,
       orderBy: { createdAt: 'desc' },
     });
@@ -152,5 +186,9 @@ export class MovimentacaoEstoqueService {
           usuario: { connect: { id: usuarioId } },
         },
     });
+  }
+
+  produtosEstoqueBaixo () {
+
   }
 }
