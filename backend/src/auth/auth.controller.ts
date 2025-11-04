@@ -13,7 +13,6 @@ import { compare, hash } from 'bcrypt';
 import { ZodValidationPipe } from 'src/pipes/zodValidationPipe';
 import { EmailService } from 'src/services/email.service';
 
-
 const authenticateBodySchema = z.object({
   username: z.string(),
   password: z.string(),
@@ -146,10 +145,13 @@ export class AuthController {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
     });
 
     return { message: 'Senha redefinida com sucesso.' };
   }
 }
-
