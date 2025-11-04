@@ -1,0 +1,185 @@
+# Casos de Uso — PDV (Ponto de Venda)
+
+---
+
+## UC01 – Header (Voltar / Título)
+
+*Pré-condições:*  
+Tela do PDV aberta.
+
+*Fluxo Principal:*  
+1. O sistema exibe o header fixo no topo com ícone de voltar e título “PDV”.  
+2. O usuário visualiza o título e interage com o PDV normalmente.
+
+*Fluxo Alternativo — Navegar para tela anterior:*  
+1. O usuário clica no ícone de voltar.  
+2. O sistema valida se há alterações não salvas (ex.: pedido em andamento).  
+3. Se não houver alterações, navega imediatamente para a tela anterior.  
+4. Se houver alterações, exibe modal de confirmação:  
+   “Deseja cancelar o pedido?” com as opções:  
+   - *Confirmar:* navega e descarta o pedido.  
+   - *Cancelar:* permanece no PDV.
+
+*Pós-condição:*  
+Usuário retorna à tela anterior (se confirmou) ou permanece no PDV.
+
+---
+
+## UC02 – Product Card (Adicionar / Remover Quantidade)
+
+*Pré-condições:*  
+Produto listado na grade (Product Card visível) e interface carregada.
+
+*Fluxo Principal – Adicionar:*  
+1. O usuário clica no botão “+”.  
+2. O sistema incrementa a quantidade exibida no Product Card.  
+3. O sistema adiciona 1 unidade do produto ao pedido atual.  
+4. O sistema atualiza o Cart Summary (quantidade total e valor total).  
+5. O sistema exibe notificação breve: “Produto adicionado”.
+
+*Fluxo Principal – Remover:*  
+1. O usuário clica no botão “–”.  
+2. Se quantidade > 0:  
+   - O sistema decrementa a quantidade.  
+   - Remove 1 unidade do pedido.  
+   - Atualiza o Cart Summary.  
+   - Se quantidade chega a 0, Product Card volta ao estado padrão.  
+3. Se quantidade = 0 e o usuário clicar em “–”: nenhuma ação (ou micro-feedback).
+
+*Fluxos Alternativos / Exceções:*  
+- Estoque insuficiente ao adicionar: exibir “Estoque insuficiente” e não incrementar.  
+- Falha de rede ao atualizar pedido: reverter a alteração local e notificar erro.
+
+*Pós-condição:*  
+Quantidade refletida no pedido e no Cart Summary; Product Card destacado se quantidade > 0.
+
+---
+
+## UC03 – Products Grid (Exibir / Atualizar Grade)
+
+*Pré-condições:*  
+Lista de produtos populares definida no sistema.
+
+*Fluxo Principal:*  
+1. O sistema renderiza a grade de produtos (ex.: 2x2 ou mais) logo abaixo do título.  
+2. Cada Product Card é exibido com nome e botões “+” e “–”.  
+3. Quando o operador altera a quantidade em qualquer Product Card, a grade atualiza o destaque e badges.
+
+*Fluxos Alternativos:*  
+- Nenhum produto configurado: exibir “Nenhum produto disponível” e campo de busca para adicionar produtos.
+
+*Pós-condição:*  
+A grade exibe produtos mais vendidos e reflete alterações em tempo real.
+
+---
+
+## UC04 – Search Field (Busca Parcial e Adição Rápida)
+
+*Pré-condições:*  
+Base de produtos carregada; campo de busca visível.
+
+*Fluxo Principal:*  
+1. O usuário digita parte do nome do produto.  
+2. O sistema realiza busca incremental (autocomplete) e mostra resultados relevantes.  
+3. O usuário seleciona um produto.  
+4. O sistema adiciona o produto ao pedido (quantidade padrão = 1).  
+5. O sistema insere o Product Card na grade e atualiza o Cart Summary.  
+6. O sistema exibe notificação “Produto adicionado”.
+
+*Fluxos Alternativos:*  
+- Nenhum resultado: exibir “Nenhum produto encontrado”.  
+- Produto já no pedido: incrementar quantidade em vez de duplicar.
+
+*Pós-condição:*  
+Produto incluído no pedido; Cart Summary atualizado.
+
+---
+
+## UC05 – Cart Summary (Painel Lateral do Pedido)
+
+*Pré-condições:*  
+Pedido em andamento (interface carregada).
+
+*Fluxo Principal:*  
+1. O sistema exibe painel lateral com:  
+   - Quantidade total de itens.  
+   - Valor total.  
+   - Forma de pagamento (seletor).  
+2. Ao adicionar ou remover produtos, o sistema atualiza os valores em tempo real.  
+3. O usuário seleciona a forma de pagamento (Dinheiro, Cartão, PIX, etc.).
+
+*Fluxos Alternativos / Exceções:*  
+- Falha de cálculo (promoção inválida): exibir alerta e manter último valor válido.  
+- Forma de pagamento com campos adicionais (ex.: cartão): exibir campos condicionais.
+
+*Pós-condição:*  
+Painel reflete o estado atual do pedido; forma de pagamento selecionada pronta para checkout.
+
+---
+
+## UC06 – Checkout Button (Finalizar Pedido)
+
+*Pré-condições:*  
+Pedido com pelo menos um produto e forma de pagamento selecionada.
+
+*Fluxo Principal:*  
+1. O usuário clica em “Finalizar”.  
+2. O sistema valida:  
+   - Há produtos no pedido?  
+   - Forma de pagamento selecionada?  
+   - Valores coerentes?  
+3. Se todas as validações forem aprovadas:  
+   - O sistema envia o pedido ao backend.  
+   - Backend confirma o sucesso.  
+   - O sistema exibe “Venda finalizada” e limpa o pedido atual.
+
+*Fluxos Alternativos / Exceções:*  
+- Sem produtos: bloquear checkout e exibir “Adicione ao menos um produto”.  
+- Sem forma de pagamento: exibir “Selecione forma de pagamento”.  
+- Falha no processamento (erro de servidor / timeout): exibir erro e manter pedido local, oferecendo nova tentativa.
+
+*Pós-condição:*  
+Pedido registrado com sucesso (ou mantido localmente em caso de erro). Cart Summary reiniciado após confirmação.
+
+---
+
+## UC07 – Notification (Mensagens Rápidas)
+
+*Pré-condições:*  
+Evento que gere notificação (adição, erro, confirmação).
+
+*Fluxo Principal:*  
+1. O sistema exibe notificação no canto superior direito com tipo (Sucesso / Erro / Alerta).  
+2. A notificação permanece visível por alguns segundos e desaparece automaticamente.
+
+*Fluxos Alternativos:*  
+- Várias notificações: agrupar em fila (stack) exibindo as mais recentes no topo.  
+- Histórico de notificações opcional.
+
+*Pós-condição:*  
+Usuário informado sobre o resultado da ação.
+
+---
+
+## UC08 – PDV (Caso de Uso Global)
+
+*Pré-condições:*  
+PDV carregado.
+
+*Fluxo Principal Resumido:*  
+1. O operador abre a tela PDV (header fixo exibido).  
+2. Seleciona produtos via Products Grid ou Search Field.  
+3. Ajusta quantidades pelos botões “+” e “–”.  
+4. Cart Summary atualiza em tempo real.  
+5. Seleciona forma de pagamento.  
+6. Clica em “Finalizar”.
+
+*Fluxos Alternativos Importantes:*  
+- Erro de estoque ao adicionar item.  
+- Falha na validação do pagamento.  
+- Operador decide cancelar pedido (confirmação).
+
+*Pós-condição:*  
+Venda registrada com sucesso e sistema pronto para novo pedido.
+
+---

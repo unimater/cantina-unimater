@@ -1,0 +1,132 @@
+# Componentes — PDV (Ponto de Venda)
+
+---
+
+## **Header**
+
+**Função:**  
+Exibir o título “PDV” e o botão de voltar.
+
+**Localização:**  
+Parte superior da tela.
+
+**Elementos internos:**  
+- Ícone de voltar (seta)  
+- Título “PDV”
+
+**Comportamento esperado:**  
+- Ao clicar na seta, retorna à tela anterior.
+
+**Observações:**  
+- Deve permanecer fixo no topo durante o uso da tela.
+
+---
+
+## **Product Card**
+
+**Função:**  
+Representar um produto disponível para venda (ex.: Pastel, Café, Coxinha, Coca).
+
+**Localização:**  
+Na grade central da tela (área dos produtos mais vendidos).
+
+**Elementos internos:**  
+- Nome do produto (ex.: “Pastel”)  
+- Botão “–” (diminuir quantidade)  
+- Campo de quantidade (número visível)  
+- Botão “+” (aumentar quantidade)
+
+**Comportamento esperado:**  
+- Ao clicar em “+”, o produto é adicionado ao pedido.  
+- Ao clicar em “–”, o produto é removido (até zero).
+
+**Observações:**  
+- Pode mudar de cor ou destacar quando tiver quantidade maior que 0.
+
+---
+
+## **Products Grid**
+
+**Função:**  
+Agrupar e organizar todos os Product Cards dos produtos principais.
+
+**Localização:**  
+Centro da tela, logo abaixo do título.
+
+**Comportamento esperado:**  
+- Exibe uma grade (2x2 ou mais) com os produtos mais vendidos.  
+- Atualiza conforme os produtos são adicionados ao pedido.
+
+---
+
+## **Search Field**
+
+**Função:**  
+Campo de busca para localizar produtos que não estão entre os mais vendidos.
+
+**Localização:**  
+Parte inferior da área dos produtos.
+
+**Elementos internos:**  
+- Campo de texto (ex.: “Campo de busca”)
+
+**Comportamento esperado:**  
+- Ao digitar parte do nome de um produto, ele aparece para seleção rápida.  
+- Permite adicionar produtos que não estão na grade principal.
+
+**Observações:**  
+- Deve ser simples e responder com resultados parciais (“meia palavra”).
+
+---
+
+## **Cart Summary**
+
+**Função:**  
+Exibir as informações do pedido atual.
+
+**Localização:**  
+Lado direito da tela (painel lateral).
+
+**Elementos internos:**  
+- **Título “Quantidade”** — quantidade total de itens no pedido.  
+- **Título “Valor Total”** — valor acumulado do pedido.  
+- **Título “Forma de pagamento”** — área de seleção do método de pagamento.
+
+**Comportamento esperado:**  
+- Atualiza automaticamente quando um produto é adicionado ou removido.
+
+---
+
+## **Checkout Button**
+
+**Função:**  
+Finalizar a venda e registrar o pedido.
+
+**Localização:**  
+Parte inferior do painel lateral.
+
+**Texto exibido:**  
+“Finalizar”
+
+**Comportamento esperado:**  
+- Ao clicar, valida se há produtos e forma de pagamento selecionada.  
+- Envia as informações do pedido para processamento.
+
+**Observações:**  
+- Pode mudar de cor ao passar o mouse (hover) ou durante o clique.
+
+---
+
+## **Notification**
+
+**Função:**  
+Exibir mensagens rápidas (ex.: “Produto adicionado”, “Erro ao finalizar pedido”).
+
+**Localização:**  
+Canto superior direito da tela.
+
+**Comportamento esperado:**  
+- Aparece por alguns segundos e desaparece automaticamente.  
+- Tipos de mensagem: Sucesso, erro ou alerta.
+
+---
