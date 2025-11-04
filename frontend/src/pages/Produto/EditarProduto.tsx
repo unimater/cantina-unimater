@@ -20,41 +20,57 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
 import { PencilLine } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import type { Categoria } from '@/type/Categoria';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
 
 type FormValues = z.infer<typeof produtoSchema>;
 
-const categorias = [
-  { id: '1', nome: 'Salgados' },
-  { id: '2', nome: 'Bebidas' },
-  { id: '3', nome: 'Doces' },
-];
-
 interface EditarProdutoProps {
   produto: Produto;
-  onProdutoAtualizado: (produto: Produto) => void;
   produtosExistentes: Produto[];
 }
 
 const EditarProduto: React.FC<EditarProdutoProps> = ({
   produto,
-  onProdutoAtualizado,
   produtosExistentes,
 }) => {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const queryClient = useQueryClient()
+  
+  const { data: categorias, isLoading: categoriasLoading } = useQuery({
+    queryKey: ['categorias'],
+    queryFn: async () => {
+      const response = await api.get<Categoria[]>('/categorias');
+      return response.data;
+    },
+    enabled: open
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (produto: Produto) => {
+      return api.patch(`/produtos/${produto.id}`, { 
+        descricao: produto.descricao,
+        valor: produto.valor,
+        situacao: produto.situacao,
+        categoriaId: produto.categoria.id
+       });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getProdutos'] })
+    },
+    onError: (data: { response: { data: { message: string } } }) => {
+      toast.error(data.response.data.message || 'Erro ao criar produto.');
+    },
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(produtoSchema),
@@ -78,9 +94,12 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
       return;
     }
 
-    const categoriaSelecionada = categorias.find(
-      (c) => c.id === data.categoriaId
-    )!;
+    const categoriaSelecionada = categorias?.find(c => c.id === data.categoriaId);
+
+    if (!categoriaSelecionada) {
+      toast.error('Selecione uma categoria válida!');
+      return;
+    }
 
     const produtoAtualizado: Produto = {
       ...produto,
@@ -91,10 +110,16 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
       updatedAt: new Date().toISOString(),
     };
 
-    onProdutoAtualizado(produtoAtualizado);
+    updateMutation.mutate(produtoAtualizado)
     toast.success('Produto atualizado com sucesso!');
     setOpen(false);
   };
+
+  useEffect(() => {
+    if (categorias && categorias.length > 0) {
+      form.setValue('categoriaId', produto.categoria?.id ?? '');
+    }
+  }, [categorias, produto.categoria?.id]);
 
   return (
     <Dialog
@@ -121,7 +146,6 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Nome */}
             <FormField
               control={form.control}
               name="nome"
@@ -143,7 +167,6 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
               )}
             />
 
-            {/* Valor */}
             <FormField
               control={form.control}
               name="valor"
@@ -170,36 +193,36 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
               )}
             />
 
-            {/* Categoria */}
             <FormField
               control={form.control}
               name="categoriaId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoria</FormLabel>
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categorias.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    {categoriasLoading ? (
+                      <Input placeholder="Carregando categorias..." disabled />
+                    ) : (
+                      <select
+                        {...field}
+                        value={field.value ?? ''}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className="border rounded-md px-3 py-2 w-full"
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categorias?.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.descricao}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {/* Situação */}
             <FormField
               control={form.control}
               name="situacao"
