@@ -1,0 +1,155 @@
+# Casos de Uso — Módulo de Gestão de Pedidos
+
+---
+
+## UC01 – Listar Pedidos
+
+**Objetivo:**  
+Permitir que o usuário visualize uma lista paginada de pedidos, com possibilidade de aplicar filtros.
+
+**Atores:**  
+Usuário Autenticado.
+
+**Pré-condição:**  
+O usuário deve estar autenticado e possuir permissão para acessar o módulo.
+
+**Fluxo Principal:**
+1. O usuário acessa a tela “Gestão de Pedidos”.  
+2. O sistema exibe a listagem de pedidos paginada.  
+3. O usuário pode aplicar filtros (data, status, forma de pagamento).  
+4. O sistema atualiza a lista conforme os filtros aplicados.
+
+**Fluxos Alternativos:**
+- FA01: Nenhum pedido encontrado → o sistema exibe a mensagem:  
+  “Nenhum pedido encontrado para os filtros selecionados.”
+
+**Pós-condição:**  
+A listagem é exibida conforme os filtros definidos.
+
+---
+
+## UC02 – Visualizar Detalhes do Pedido
+
+**Objetivo:**  
+Apresentar informações completas de um pedido específico.
+
+**Atores:**  
+Usuário Autenticado.
+
+**Pré-condição:**  
+O usuário deve estar na tela de listagem e selecionar um pedido.
+
+**Fluxo Principal:**
+1. O usuário clica em “Visualizar Detalhes”.  
+2. O sistema abre uma modal com os dados completos do pedido:  
+   - ID, data/hora, status, forma de pagamento, valor total.  
+   - Lista de itens (produto, quantidade, valor unitário, subtotal).  
+3. O usuário pode fechar a modal ou optar por cancelar o pedido (se aplicável).
+
+**Regras de Negócio:**
+- RN.1: Pedidos finalizados podem transitar apenas para o estado “Cancelado”.  
+- RN.3: O botão “Cancelar Pedido” deve aparecer apenas para pedidos do dia atual.
+
+**Pós-condição:**  
+Nenhuma alteração é feita — apenas exibição de dados.
+
+---
+
+## UC03 – Cancelar Pedido
+
+**Objetivo:**  
+Permitir que o usuário cancele um pedido, respeitando as restrições de data e motivo.
+
+**Atores:**  
+Usuário Autenticado, Sistema, Módulo de Estoque.
+
+**Pré-condições:**
+- O pedido deve estar em estado “Finalizado”.  
+- O pedido deve ser do dia atual (RN.3).
+
+**Fluxo Principal:**
+1. O usuário, a partir da modal de detalhes, clica em “Cancelar Pedido”.  
+2. O sistema abre a modal de cancelamento com a mensagem:  
+   “Ao cancelar o pedido, não será possível reverter. Deseja realmente prosseguir com a ação?”  
+3. O usuário informa o motivo do cancelamento (campo obrigatório).  
+4. O usuário clica em Confirmar.  
+5. O sistema valida:  
+   - Se o pedido é do dia atual.  
+   - Se o motivo foi informado.  
+6. O sistema altera o status do pedido para “Cancelado”.  
+7. O sistema registra:  
+   - motivoCancelamento  
+   - dataCancelamento  
+8. O sistema aciona o módulo de estoque para realizar o estorno dos itens (RN.4).  
+9. O sistema exibe a mensagem:  
+   “Pedido cancelado com sucesso.”
+
+**Fluxos Alternativos:**
+- FA01: Pedido não é do dia atual → “Não é possível cancelar pedidos de dias anteriores.”  
+- FA02: Motivo não informado → “O motivo do cancelamento é obrigatório.”  
+- FA03: Usuário clica em “Cancelar” na modal → ação é abortada (RN.2).
+
+**Pós-condições:**
+- O pedido tem status alterado para Cancelado.  
+- O estoque é atualizado.  
+- O cancelamento é registrado com data e motivo.
+
+---
+
+## UC04 – Filtrar Pedidos
+
+**Objetivo:**  
+Permitir que o usuário refine a listagem de pedidos com base em critérios específicos.
+
+**Atores:**  
+Usuário Autenticado.
+
+**Fluxo Principal:**
+1. O usuário acessa os campos de filtro na tela de listagem.  
+2. O usuário informa:  
+   - Intervalo de datas.  
+   - Status do pedido.  
+   - Forma de pagamento.  
+3. O sistema atualiza a grid com os resultados filtrados.
+
+**Pós-condição:**  
+A tabela exibe apenas os pedidos que correspondem aos filtros selecionados.
+
+---
+
+## UC05 – Paginar Pedidos
+
+**Objetivo:**  
+Permitir a navegação entre páginas de pedidos, garantindo desempenho em grandes volumes de dados.
+
+**Atores:**  
+Usuário Autenticado.
+
+**Fluxo Principal:**
+1. O usuário interage com os controles de paginação (próxima, anterior, número da página).  
+2. O sistema carrega a página correspondente com os pedidos daquela faixa.
+
+**Pós-condição:**  
+A listagem é atualizada conforme a página selecionada.
+
+---
+
+## UC06 – Registrar Histórico de Pedidos
+
+**Objetivo:**  
+Manter o histórico de pedidos e suas alterações (como cancelamentos) no banco de dados.
+
+**Atores:**  
+Sistema.
+
+**Fluxo Principal:**
+1. Quando um pedido é criado, atualizado ou cancelado, o sistema grava o evento no histórico.  
+2. As informações registradas incluem:  
+   - ID do pedido.  
+   - Data/hora da operação.  
+   - Produto.  
+
+**Pós-condição:**  
+O histórico fica disponível para consultas futuras e auditoria.
+
+---
