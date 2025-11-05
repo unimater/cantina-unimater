@@ -71,3 +71,7 @@
 - Caso nenhum dado seja encontrado, o sistema deve exibir a mensagem:  
   > “Nenhum registro encontrado para os filtros aplicados.”     
 - Todos os filtros devem ter o valor padrão “Todos” caso não sejam configurados.  
+
+## Visualização
+
+![Fechamento de Caixa - Caso de Uso](../../assets/fechamentoCaixaCasoUso.jpeg)
