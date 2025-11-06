@@ -1,14 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ProdutosService } from './produtos.service';
 import { CreateProdutoDto } from './dto/create-produto.dto';
 import { UpdateProdutoDto } from './dto/update-produto.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CurrentUser } from 'src/auth/current-user-decorator';
+import type { UserAuthPayload } from 'src/auth/jwt.strategy';
 
 @Controller('produtos')
+@UseGuards(JwtAuthGuard)
 export class ProdutosController {
   constructor(private readonly produtosService: ProdutosService) {}
 
   @Post()
-  create(@Body() createProdutoDto: CreateProdutoDto) {
+  create(@Body() createProdutoDto: CreateProdutoDto, @CurrentUser() user: UserAuthPayload) {
+    console.log('user', user.sub);
     return this.produtosService.create(createProdutoDto);
   }
 
@@ -23,12 +28,14 @@ export class ProdutosController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProdutoDto: UpdateProdutoDto) {
+  update(@Param('id') id: string, @Body() updateProdutoDto: UpdateProdutoDto, @CurrentUser() user: UserAuthPayload) {
+    console.log('user', user.sub);
     return this.produtosService.update(id, updateProdutoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @CurrentUser() user: UserAuthPayload) {
+    console.log('user', user.sub);
     return this.produtosService.remove(id);
   }
 }
