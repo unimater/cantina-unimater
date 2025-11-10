@@ -13,8 +13,7 @@ export class ProdutosController {
 
   @Post()
   create(@Body() createProdutoDto: CreateProdutoDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
-    return this.produtosService.create(createProdutoDto);
+    return this.produtosService.create(createProdutoDto, user.sub);
   }
 
   @Get()
@@ -28,14 +27,12 @@ export class ProdutosController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProdutoDto: UpdateProdutoDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  update(@Param('id') id: string, @Body() updateProdutoDto: UpdateProdutoDto) {
     return this.produtosService.update(id, updateProdutoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  remove(@Param('id') id: string) {
     return this.produtosService.remove(id);
   }
 }

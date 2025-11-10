@@ -22,8 +22,7 @@ export class UsersController {
 
   @Post()
   create(@Body() userDto: UserDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
-    return this.usersService.create(userDto);
+    return this.usersService.create(userDto, user.sub);
   }
 
   @Get()
@@ -45,14 +44,12 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() userDto: UserDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  update(@Param('id') id: string, @Body() userDto: UserDto) {
     return this.usersService.update(id, userDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }

@@ -14,8 +14,7 @@ export class DespesasController {
   // Criar despesa
   @Post()
   create(@Body() createDespesaDto: CreateDespesaDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
-    return this.despesasService.create(createDespesaDto);
+    return this.despesasService.create(createDespesaDto, user.sub);
   }
 
   // Listar todas as despesas
@@ -32,15 +31,13 @@ export class DespesasController {
 
   // Atualizar despesa
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateDespesaDto: UpdateDespesaDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  update(@Param('id') id: string, @Body() updateDespesaDto: UpdateDespesaDto) {
     return this.despesasService.update(id, updateDespesaDto);
   }
 
   // Remover despesa
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  remove(@Param('id') id: string) {
     return this.despesasService.remove(id);
   }
 }

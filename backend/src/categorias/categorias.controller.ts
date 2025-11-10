@@ -13,8 +13,7 @@ export class CategoriasController {
 
   @Post()
   create(@Body() createCategoriaDto: CreateCategoriaDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
-    return this.categoriasService.create(createCategoriaDto);
+    return this.categoriasService.create(createCategoriaDto, user.sub);
   }
 
   @Get()
@@ -28,14 +27,12 @@ export class CategoriasController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoriaDto: UpdateCategoriaDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  update(@Param('id') id: string, @Body() updateCategoriaDto: UpdateCategoriaDto) {
     return this.categoriasService.update(id, updateCategoriaDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  remove(@Param('id') id: string) {
     return this.categoriasService.remove(id);
   }
 }

@@ -14,8 +14,7 @@ export class FormasPagamentoController {
   @Post()
   @HttpCode(201)
   create(@Body() createFormasPagamentoDto: CreateFormasPagamentoDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
-    return this.formasPagamentoService.create(createFormasPagamentoDto);
+    return this.formasPagamentoService.create(createFormasPagamentoDto, user.sub);
   }
 
   @Get()
@@ -29,14 +28,12 @@ export class FormasPagamentoController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFormasPagamentoDto: UpdateFormasPagamentoDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  update(@Param('id') id: string, @Body() updateFormasPagamentoDto: UpdateFormasPagamentoDto) {
     return this.formasPagamentoService.update(id, updateFormasPagamentoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
+  remove(@Param('id') id: string) {
     return this.formasPagamentoService.remove(id);
   }
 }
