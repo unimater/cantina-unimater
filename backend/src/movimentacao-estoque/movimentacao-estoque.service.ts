@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateMovimentacaoEstoqueDto } from './dto/create-movimentacao-estoque.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { gt } from 'zod';
 
 @Injectable()
 export class MovimentacaoEstoqueService {
@@ -16,6 +15,10 @@ export class MovimentacaoEstoqueService {
       quantidade, 
       observacoes 
     } = CreateMovimentacaoEstoqueDto;
+
+    if (!produtoId || !quantidade || !usuarioId || Number(quantidade) === 0) {
+      throw new BadRequestException("Valores obrigatórios invalidos")
+    }
 
     const usuario = await this.prismaService.user.findUnique({
       where: {
@@ -104,14 +107,14 @@ export class MovimentacaoEstoqueService {
         tipo: true,
         motivo: true,
         quantidade: true,
-        estoqueAnterior: true,
-        estoqueAtual: true,
         observacoes: true,
         createdAt: true,
         produto: {
           select: {
             id: true,
             descricao: true,
+            estoqueMinimo: true,
+            quantidadeEstoque: true,
           },
         },
         usuario: {
@@ -129,7 +132,8 @@ export class MovimentacaoEstoqueService {
   listarEstoque(){
     return this.prismaService.produto.findMany({
       where: {
-        quantidadeEstoque: { gt: 0 }
+        quantidadeEstoque: { gt: 0 },
+        situacao: true
       }
     })
   }
@@ -188,7 +192,41 @@ export class MovimentacaoEstoqueService {
     });
   }
 
-  produtosEstoqueBaixo () {
+  async produtosEstoqueBaixo() {
+    const produtos = await this.prismaService.produto.findMany({
+      select: {
+        id: true,
+        descricao: true,
+        quantidadeEstoque: true,
+        estoqueMinimo: true,
+      },
+      where: {
+        situacao: true
+      }
+    });
 
+    return produtos.filter(p => p.quantidadeEstoque < p.estoqueMinimo);
   }
+
+  async produtoEstoque(id: string){
+    const produtos = await this.prismaService.produto.findUnique({
+      select: {
+        id: true,
+        descricao: true,
+        quantidadeEstoque: true,
+        estoqueMinimo: true,
+      },
+      where: {
+        id: id,
+        situacao: true,
+      }
+    })
+
+    if (!produtos) {
+      throw new BadRequestException('Produto inexistente ou invativo')
+    } else {
+      return produtos;
+    }
+  }
+
 }

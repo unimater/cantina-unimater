@@ -1,10 +1,12 @@
 export type Estoque = {
     id?: string;
     tipo: 'ENTRADA' | 'SAIDA';
+    produtoId?: string;
+    usuarioId: string
     motivo: string;
-    quantidade: number;
+    quantidade: string;
     observacoes?: string;
-    produto: {descricao: string; id: string;};
-    usuario: {name: string; id: string;};
+    produto?: {descricao: string; id: string; quantidadeEstoque:string; estoqueMinimo: string};
+    usuario?: {name: string; id: string;};
     createdAt?: string;
 }

@@ -3,7 +3,7 @@ export class CreateMovimentacaoEstoqueDto {
     usuarioId: string
     tipo: 'ENTRADA' | 'SAIDA';
     motivo: string
-    quantidade: number
+    quantidade: number;
     estoqueAnterior: number
     estoqueAtual: number
     observacoes?: string

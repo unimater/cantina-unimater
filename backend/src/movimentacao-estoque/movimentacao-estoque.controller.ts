@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { MovimentacaoEstoqueService } from './movimentacao-estoque.service';
 import { CreateMovimentacaoEstoqueDto } from './dto/create-movimentacao-estoque.dto';
-import { UpdateMovimentacaoEstoqueDto } from './dto/update-movimentacao-estoque.dto';
 
 @Controller('estoque')
 export class MovimentacaoEstoqueController {
@@ -39,5 +38,15 @@ export class MovimentacaoEstoqueController {
     @Body() bodyBaixaPdv: {produtoId: string, quantidade: number, usuarioId: string}
   ) {
     return this.movimentacaoEstoqueService.baixarEstoque(bodyBaixaPdv)
+  }
+
+  @Get('/baixo')
+  produtosEstoqueBaixo(){
+    return this.movimentacaoEstoqueService.produtosEstoqueBaixo();  
+  }
+
+  @Get('/baixo/:id')
+  produtoEstoque(@Param('id') id: string){
+    return this.movimentacaoEstoqueService.produtoEstoque(id)
   }
 }
