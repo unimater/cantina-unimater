@@ -1,0 +1,232 @@
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { CreateMovimentacaoEstoqueDto } from './dto/create-movimentacao-estoque.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+@Injectable()
+export class MovimentacaoEstoqueService {
+  constructor(private prismaService: PrismaService) {}
+
+  async registrarMovimentacao(CreateMovimentacaoEstoqueDto: CreateMovimentacaoEstoqueDto) {
+    const { 
+      produtoId, 
+      usuarioId, 
+      tipo, 
+      motivo, 
+      quantidade, 
+      observacoes 
+    } = CreateMovimentacaoEstoqueDto;
+
+    if (!produtoId || !quantidade || !usuarioId || Number(quantidade) === 0) {
+      throw new BadRequestException("Valores obrigatórios invalidos")
+    }
+
+    const usuario = await this.prismaService.user.findUnique({
+      where: {
+        id: usuarioId
+      }
+    })
+
+    if (!usuario) {
+      throw new BadRequestException(`Usuário ${usuarioId} não foi encontrado`)
+    };
+
+    const produto = await this.prismaService.produto.findUnique({ 
+      where: {
+        id: produtoId
+      }
+    });
+
+    if (!produto) {
+      throw new BadRequestException(`Produto ${produtoId} não foi encontrado`)
+    };
+
+    const estoqueAnterior = produto.quantidadeEstoque;
+    let estoqueAtual = estoqueAnterior;
+
+    if (tipo === 'ENTRADA') 
+      estoqueAtual = estoqueAtual.add(quantidade);
+      else if (tipo === 'SAIDA') {
+        if (estoqueAnterior.lt(quantidade))
+          throw new BadRequestException('Estoque insuficiente.');
+        estoqueAtual = estoqueAtual.sub(quantidade);
+    } else {
+        throw new BadRequestException('Tipo de movimentação inválido.');
+    }
+
+    await this.prismaService.produto.update({
+        where: { id: produtoId },
+        data: { quantidadeEstoque: estoqueAtual },
+    });
+
+
+    await this.prismaService.movimentacaoEstoque.create({
+      data: {
+        produto: { connect: { id: produtoId } },
+        usuario: { connect: { id: usuarioId } },
+        tipo, 
+        motivo, 
+        quantidade, 
+        estoqueAnterior, 
+        estoqueAtual, 
+        observacoes 
+      },
+      include: { 
+        produto: true, 
+        usuario: true 
+      },
+    })
+  }
+
+  listarMovimentacoes(filtros: {
+    tipo?: 'ENTRADA' | 'SAIDA';
+    produtoId?: string;
+    usuarioId?: string;
+    dataInicio?: string;
+    dataFim?: string;
+  }) {
+    const where: any = {};
+
+    if (filtros.tipo) where.tipo = filtros.tipo;
+    if (filtros.produtoId) where.produtoId = filtros.produtoId;
+    if (filtros.usuarioId) where.usuarioId = filtros.usuarioId;
+    if (filtros.dataInicio || filtros.dataFim) {
+    where.createdAt = {};
+
+    if (filtros.dataInicio)
+      where.createdAt.gte = new Date(filtros.dataInicio);
+    if (filtros.dataFim)
+      where.createdAt.lte = new Date(filtros.dataFim);
+
+    console.log(`${filtros.dataInicio} - ${filtros.dataFim}`);
+  }
+
+
+    return this.prismaService.movimentacaoEstoque.findMany({
+      select: {
+        id: true,
+        tipo: true,
+        motivo: true,
+        quantidade: true,
+        observacoes: true,
+        createdAt: true,
+        produto: {
+          select: {
+            id: true,
+            descricao: true,
+            estoqueMinimo: true,
+            quantidadeEstoque: true,
+          },
+        },
+        usuario: {
+          select: {
+            id: true,
+            name: true
+          },
+        },
+      },
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  listarEstoque(){
+    return this.prismaService.produto.findMany({
+      where: {
+        quantidadeEstoque: { gt: 0 },
+        situacao: true
+      }
+    })
+  }
+
+  async baixarEstoque(bodyBaixaPdv: { produtoId: string, quantidade: number, usuarioId: string }) {
+    const { produtoId, quantidade, usuarioId } = bodyBaixaPdv
+
+    if (!produtoId || !quantidade || !usuarioId || quantidade === 0) {
+      throw new BadRequestException("Valores obrigatórios invalidos")
+    }
+
+    const usuario = await this.prismaService.user.findUnique({
+      where: {
+        id: usuarioId
+      }
+    })
+
+    if (!usuario) {
+      throw new BadRequestException(`Usuário ${usuarioId} não foi encontrado`)
+    };
+
+    const produto = await this.prismaService.produto.findUnique({ 
+      where: {
+        id: produtoId
+      }
+    });
+
+    if (!produto) {
+      throw new BadRequestException(`Produto ${produtoId} não foi encontrado`)
+    };
+
+
+
+    const estoqueAnterior = produto.quantidadeEstoque
+
+    if (estoqueAnterior.lt(quantidade))
+        throw new BadRequestException('Estoque insuficiente.');
+
+    const estoqueAtual = estoqueAnterior.sub(quantidade);
+
+    await this.prismaService.produto.update({
+      where: {id: produtoId},
+      data: { quantidadeEstoque: estoqueAtual}
+    })
+
+    await this.prismaService.movimentacaoEstoque.create({
+        data: {
+          tipo: 'SAIDA',
+          motivo: 'Venda PDV',
+          quantidade,
+          estoqueAnterior,
+          estoqueAtual,
+          produto: { connect: { id: produtoId } },
+          usuario: { connect: { id: usuarioId } },
+        },
+    });
+  }
+
+  async produtosEstoqueBaixo() {
+    const produtos = await this.prismaService.produto.findMany({
+      select: {
+        id: true,
+        descricao: true,
+        quantidadeEstoque: true,
+        estoqueMinimo: true,
+      },
+      where: {
+        situacao: true
+      }
+    });
+
+    return produtos.filter(p => p.quantidadeEstoque < p.estoqueMinimo);
+  }
+
+  async produtoEstoque(id: string){
+    const produtos = await this.prismaService.produto.findUnique({
+      select: {
+        id: true,
+        descricao: true,
+        quantidadeEstoque: true,
+        estoqueMinimo: true,
+      },
+      where: {
+        id: id,
+        situacao: true,
+      }
+    })
+
+    if (!produtos) {
+      throw new BadRequestException('Produto inexistente ou invativo')
+    } else {
+      return produtos;
+    }
+  }
+
+}
