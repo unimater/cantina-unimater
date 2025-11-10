@@ -7,6 +7,7 @@ import { MainLayout } from '@/components/MainLayout';
 import ListarProdutos from '@/pages/Produto/ListarProduto';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
 import ListarDespesas from '@/pages/Despesas/ListarDespesas';
+import ListarPedido from '@/pages/Pedido/ListarPedidos';
 import FormasPagamento from '@/pages/FormasPagamento/FormasPagamento';
 import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
@@ -67,6 +68,10 @@ function App() {
           <Route
             path='produtos'
             element={<ListarProdutos />}
+          />
+             <Route
+            path='pedido'
+            element={<ListarPedido />}
           />
         </Route>
 
