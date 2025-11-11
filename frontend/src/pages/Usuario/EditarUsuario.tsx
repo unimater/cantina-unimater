@@ -46,10 +46,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
 
   const updateMutation = useMutation({
     mutationFn: async (usuarioAtualizado: Usuario) => {
-      const response = await api.patch(
-        `http://localhost:3000/users/${usuario.id}`,
-        usuarioAtualizado
-      );
+      const response = await api.patch( `http://localhost:3000/users/${usuario.id}`, usuarioAtualizado);
       return response.data;
     },
     onSuccess: usuarioAtualizadoDoBackend => {
@@ -136,16 +133,21 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
       return;
     }
 
+    const { password: senhaOmitida, ...usuarioSemSenha } = usuario;
+
     const usuarioAtualizado: Usuario = {
-      ...usuario,
+      ...usuarioSemSenha,
       name: data.nome,
       cpf: data.cpf,
       active: data.situacao,
       email: data.email || undefined,
       phone: data.telefone || undefined,
       username: data.usuario,
-      password: data.senha || usuario.password,
     };
+
+    if (data.senha && data.senha.trim() !== '') {
+      usuarioAtualizado.password = data.senha;
+    }
 
     updateMutation.mutate(usuarioAtualizado);
   };
