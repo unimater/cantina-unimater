@@ -1,15 +1,15 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { Switch } from '@/components/ui/switch';
-import { pedidoSchema } from '@/lib/PedidoSchema'; // VERIFICAR PQ N IMPORTA
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
+import { Switch } from '@/components/ui/switch'
+import { pedidoSchema } from '@/lib/PedidoSchema'
 import {
   Form,
   FormControl,
@@ -17,134 +17,131 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import type { Pedido } from '@/type/Pedido'; // VERIFICAR PQ NAO IMPORTA 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+} from '@/components/ui/form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import type { Pedido } from '@/type/Pedido'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
 
-type FormValues = z.infer<typeof pedidoSchema>;
+type FormValues = z.infer<typeof pedidoSchema>
 
 interface CriarPedidoProps {
-  onPedidoCriado: (pedido: Pedido) => void;
-  pedidosExistentes: Pedido[];
+  onPedidoCriado: (pedido: Pedido) => void
+  pedidosExistentes: Pedido[]
 }
 
 const CriarPedido: React.FC<CriarPedidoProps> = ({
   onPedidoCriado,
   pedidosExistentes,
 }) => {
-  const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const createMutation = useMutation({
-    mutationFn: async (novoPedido: Omit<Pedido, 'id'>) => {
-      const response = await axios.post('http://localhost:3000/pedido', novoPedido);
-      return response.data;
+    mutationFn: async (novoPedido: FormValues) => {
+      const response = await axios.post('http://localhost:3000/pedido', novoPedido)
+      return response.data
     },
     onSuccess: pedidoCriado => {
-      queryClient.invalidateQueries({ queryKey: ['getPedidos'] });
-      onPedidoCriado(pedidoCriado);
+      queryClient.invalidateQueries({ queryKey: ['getPedidos'] })
+      onPedidoCriado(pedidoCriado)
       toast.success('Sucesso!', {
         description: 'O pedido foi incluído com sucesso.',
-      });
+      })
       form.reset({
         descricao: '',
-        valorTotal: 0,
+        total: 0,
         situacao: true,
-      });
-      setOpen(false);
+        categoria: 'PRODUTO',
+      })
+      setOpen(false)
     },
     onError: (error: { response: { data: { message: string } } }) => {
-      const message = error.response?.data?.message || 'Não foi possível atualizar o pedido.';
+      const message =
+        error.response?.data?.message || 'Não foi possível salvar o pedido.'
 
       toast.error('Erro!', {
         description: message,
-      });
+      })
     },
-  });
+  })
 
   const form = useForm({
     resolver: zodResolver(pedidoSchema),
     defaultValues: {
       descricao: '',
-      valorTotal: 0,
+      total: 0,
       situacao: true,
+      categoria: 'PRODUTO',
     },
-  });
+  })
 
   const onSubmit = (data: FormValues) => {
-    console.log(data)
     const descricaoNormalizada = (str: string) =>
       str
         .trim()
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+        .replace(/[\u0300-\u036f]/g, '')
 
     const descricaoDuplicada = pedidosExistentes.some(
       p => descricaoNormalizada(p.descricao) === descricaoNormalizada(data.descricao)
-    );
+    )
 
     if (descricaoDuplicada) {
       toast.error('Não foi possível salvar o pedido!', {
         description: 'Já existe um pedido com a mesma descrição. Verifique!',
-      });
-      return;
+      })
+      return
     }
 
-   const novoPedido = {
+    const novoPedido = {
       descricao: data.descricao,
-      valorTotal: data.valorTotal,
+      total: data.total,
       situacao: data.situacao,
-      categoria: data.categoria, // vem do form (FormValues)
-      createdAt: new Date().toISOString(),
-    };
-    console.log(novoPedido)
-    createMutation.mutate(novoPedido);
-  };
+      categoria: data.categoria,
+    
+    }
+
+    createMutation.mutate(novoPedido)
+  }
 
   const handleCancelar = () => {
     form.reset({
       descricao: '',
-      valorTotal: 0,
+      total: 0,
       situacao: true,
-    });
-    setOpen(false);
-  };
+      categoria: 'PRODUTO',
+    })
+    setOpen(false)
+  }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={setOpen}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className='cursor-pointer'>Novo Pedido</Button>
+        <Button className="cursor-pointer">Novo Pedido</Button>
       </DialogTrigger>
 
-      <DialogContent className='max-h-screen max-w-2xl overflow-y-auto'>
+      <DialogContent className="max-h-screen max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cadastrar Pedido</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className='space-y-6'
-          >
-            <div className='space-y-4 rounded-lg border p-4'>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="space-y-4 rounded-lg border p-4">
               <FormField
                 control={form.control}
-                name='descricao'
+                name="descricao"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Descrição *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Digite a descrição do pedido'
+                        placeholder="Digite a descrição do pedido"
                         {...field}
                       />
                     </FormControl>
@@ -155,14 +152,16 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
 
               <FormField
                 control={form.control}
-                name='valorTotal'
+                name="total"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Valor *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder='Digite o valor total do pedido'
+                        type="number"
+                        placeholder="Digite o valor total do pedido"
                         {...field}
+                        value={field.value as number | string}
                       />
                     </FormControl>
                     <FormMessage />
@@ -170,11 +169,31 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
                 )}
               />
 
-              <div className='flex items-center gap-2'>
+              <FormField
+                control={form.control}
+                name="categoria"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoria *</FormLabel>
+                    <FormControl>
+                      <select
+                        {...field}
+                        className="w-full rounded-md border px-3 py-2"
+                      >
+                        <option value="PRODUTO">PRODUTO</option>
+                        <option value="DESPESA">DESPESA</option>
+                      </select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex items-center gap-2">
                 <FormLabel>Situação</FormLabel>
                 <FormField
                   control={form.control}
-                  name='situacao'
+                  name="situacao"
                   render={({ field }) => (
                     <FormControl>
                       <Switch
@@ -187,19 +206,19 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
               </div>
             </div>
 
-            <div className='flex justify-end gap-2 pt-4'>
+            <div className="flex justify-end gap-2 pt-4">
               <Button
-                type='button'
-                variant='outline'
-                className='cursor-pointer'
+                type="button"
+                variant="outline"
+                className="cursor-pointer"
                 onClick={handleCancelar}
               >
                 Cancelar
               </Button>
               <Button
-                type='submit'
+                type="submit"
                 disabled={createMutation.isPending}
-                className='cursor-pointer'
+                className="cursor-pointer"
               >
                 {createMutation.isPending ? 'Salvando...' : 'Salvar'}
               </Button>
@@ -208,7 +227,7 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
         </Form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default CriarPedido;
+export default CriarPedido

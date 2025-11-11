@@ -1,11 +1,11 @@
-
-
 export interface Pedido {
   id: string;
   descricao: string;
-  valorTotal: number;
+  total: number; 
   situacao: boolean;
-  categoria: string; // VERIFICAR PQ NAO FICOU AZUL
-  createdAt: string;
+  categoria?: string;
+  status?: string;
+  dataPedido?: string;
+  createdAt?: string;
   updatedAt?: string;
 }

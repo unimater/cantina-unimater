@@ -49,7 +49,7 @@ const ListarPedido: React.FC = () => {
   useEffect(() => {
     if (error) {
       toast.error('Erro ao carregar pedidos', {
-        description: error.message,
+        description: (error as Error).message,
       });
     }
   }, [error]);
@@ -110,7 +110,15 @@ const ListarPedido: React.FC = () => {
               pedidosFiltrados.map(pedido => (
                 <TableRow key={`pedido-${pedido.id}`}>
                   <TableCell>{pedido.descricao}</TableCell>
-                  <TableCell>{pedido.valorTotal}</TableCell>
+
+                  {/* ✅ Campo corrigido e formatado */}
+                  <TableCell>
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(Number(pedido.total || 0))}
+                  </TableCell>
+
                   <TableCell>
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${
