@@ -30,7 +30,6 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // ✅ Obtém a porta do .env
   const configService = app.get<ConfigService<Env, true>>(ConfigService);
   const port = configService.get('PORT', { infer: true });
 

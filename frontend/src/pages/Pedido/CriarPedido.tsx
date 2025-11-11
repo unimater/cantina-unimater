@@ -26,6 +26,7 @@ import type { Pedido } from '@/type/Pedido'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import axios from 'axios'
 
+// ✅ Tipagem do formulário com base no schema Zod
 type FormValues = z.infer<typeof pedidoSchema>
 
 interface CriarPedidoProps {
@@ -40,8 +41,19 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
+
+    const form = useForm<z.infer<typeof pedidoSchema>>({
+    resolver: zodResolver(pedidoSchema),
+    defaultValues: {
+      descricao: '',
+      total: 0,
+      categoria: 'PRODUTO',
+      situacao: true,
+    },
+  })
+
   const createMutation = useMutation({
-    mutationFn: async (novoPedido: FormValues) => {
+    mutationFn: async (novoPedido: Omit<Pedido, 'id'>) => {
       const response = await axios.post('http://localhost:3000/pedido', novoPedido)
       return response.data
     },
@@ -54,67 +66,46 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
       form.reset({
         descricao: '',
         total: 0,
-        situacao: true,
         categoria: 'PRODUTO',
+        situacao: true,
       })
       setOpen(false)
     },
-    onError: (error: { response: { data: { message: string } } }) => {
+    onError: (error: any) => {
       const message =
-        error.response?.data?.message || 'Não foi possível salvar o pedido.'
-
-      toast.error('Erro!', {
-        description: message,
-      })
-    },
-  })
-
-  const form = useForm({
-    resolver: zodResolver(pedidoSchema),
-    defaultValues: {
-      descricao: '',
-      total: 0,
-      situacao: true,
-      categoria: 'PRODUTO',
+        error?.response?.data?.message || 'Não foi possível criar o pedido.'
+      toast.error('Erro ao criar pedido', { description: message })
     },
   })
 
   const onSubmit = (data: FormValues) => {
-    const descricaoNormalizada = (str: string) =>
-      str
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-
+    // Normaliza e evita descrições duplicadas
     const descricaoDuplicada = pedidosExistentes.some(
-      p => descricaoNormalizada(p.descricao) === descricaoNormalizada(data.descricao)
+      p => p.descricao.toLowerCase() === data.descricao.toLowerCase()
     )
 
     if (descricaoDuplicada) {
-      toast.error('Não foi possível salvar o pedido!', {
-        description: 'Já existe um pedido com a mesma descrição. Verifique!',
-      })
+      toast.error('Já existe um pedido com essa descrição.')
       return
     }
 
+    // ✅ Cria o pedido
     const novoPedido = {
       descricao: data.descricao,
-      total: data.total,
-      situacao: data.situacao,
+      total: Number(data.total),
       categoria: data.categoria,
-    
+      situacao: data.situacao,
     }
 
-    createMutation.mutate(novoPedido)
+    createMutation.mutate(novoPedido as any)
   }
 
   const handleCancelar = () => {
     form.reset({
       descricao: '',
       total: 0,
-      situacao: true,
       categoria: 'PRODUTO',
+      situacao: true,
     })
     setOpen(false)
   }
@@ -133,6 +124,7 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-4 rounded-lg border p-4">
+              {/* Descrição */}
               <FormField
                 control={form.control}
                 name="descricao"
@@ -140,16 +132,14 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
                   <FormItem>
                     <FormLabel>Descrição *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Digite a descrição do pedido"
-                        {...field}
-                      />
+                      <Input placeholder="Digite a descrição do pedido" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Valor */}
               <FormField
                 control={form.control}
                 name="total"
@@ -161,7 +151,7 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
                         type="number"
                         placeholder="Digite o valor total do pedido"
                         {...field}
-                        value={field.value as number | string}
+                        onChange={e => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
@@ -169,6 +159,7 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
                 )}
               />
 
+              {/* Categoria */}
               <FormField
                 control={form.control}
                 name="categoria"
@@ -177,18 +168,18 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
                     <FormLabel>Categoria *</FormLabel>
                     <FormControl>
                       <select
+                        className="w-full rounded border px-3 py-2"
                         {...field}
-                        className="w-full rounded-md border px-3 py-2"
                       >
                         <option value="PRODUTO">PRODUTO</option>
                         <option value="DESPESA">DESPESA</option>
                       </select>
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Situação */}
               <div className="flex items-center gap-2">
                 <FormLabel>Situação</FormLabel>
                 <FormField
@@ -210,8 +201,8 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                className="cursor-pointer"
                 onClick={handleCancelar}
+                className="cursor-pointer"
               >
                 Cancelar
               </Button>
