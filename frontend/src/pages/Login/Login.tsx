@@ -23,20 +23,20 @@ export function Login() {
   const navigate = useNavigate();
 
   const mutation = useMutation({
-    mutationFn: () => {
-      return axios.post('http://localhost:3000/sessions', { username, password });
+    mutationFn: async () => {
+      const response = await axios.post('http://localhost:3000/sessions', { username, password });
+      return response.data;
     },
-    onSuccess: () => {
-      toast('Login realizado com sucesso.', {
-        description: 'Redirecionando para a página de usuários...',
+    onSuccess: (data) => {
+      authUtils.setUser({
+        id: data.id,
+        nome: data.nome,
+        usuario: username,
+        token: data.access_token
       });
 
-      authUtils.setUser({
-        id: 1,
-        nome: 'Usuário Teste',
-        usuario: username,
-        situacao: true,
-        senha: '',
+      toast('Login realizado com sucesso.', {
+        description: 'Redirecionando para a página de usuários...',
       });
 
       navigate('/usuarios');
