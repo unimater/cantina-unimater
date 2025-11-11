@@ -16,13 +16,13 @@ import { toast } from 'sonner';
 import CriarDespesa from './CriarDespesas';
 import EditarDespesa from './EditarDespesas';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { format, parseISO } from 'date-fns';
+import api from '@/api/api';
 
 const ListarDespesas: React.FC = () => {
   const { data } = useQuery<{ data: Despesa[] }>({
     queryKey: ['getDespesas'],
-    queryFn: () => axios.get('http://localhost:3000/despesas'),
+    queryFn: () => api.get('http://localhost:3000/despesas'),
   });
 
   const [filtro, setFiltro] = useState('');

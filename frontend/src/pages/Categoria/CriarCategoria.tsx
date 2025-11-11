@@ -24,7 +24,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Categoria } from '@/type/Categoria';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/api/api';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -42,7 +42,7 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
 
   const createMutation = useMutation({
     mutationFn: async (novaCategoria: Omit<Categoria, 'id'>) => {
-      const response = await axios.post('http://localhost:3000/categorias', novaCategoria);
+      const response = await api.post('http://localhost:3000/categorias', novaCategoria);
       return response.data;
     },
     onSuccess: categoriaCriada => {

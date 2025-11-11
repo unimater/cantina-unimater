@@ -20,11 +20,11 @@ import { Switch } from '@/components/ui/switch';
 import type { FormaPagamento } from '@/type/FormaPagamento';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import api from '@/api/api';
 
 const pagamentoSchema = z.object({
   name: z
@@ -43,7 +43,7 @@ const CriarPagamento = () => {
 
   const createMutation = useMutation({
     mutationFn: async (novaFormaPagamento: Omit<FormaPagamento, 'id'>) => {
-      const response = await axios.post(
+      const response = await api.post(
         'http://localhost:3000/formas-pagamento',
         novaFormaPagamento
       );

@@ -13,8 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
 import { toast } from 'sonner';
+import api from '@/api/api';
 
 export function Login() {
   const [username, setUsername] = useState('');
@@ -24,7 +24,7 @@ export function Login() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const response = await axios.post('http://localhost:3000/sessions', { username, password });
+      const response = await api.post('http://localhost:3000/sessions', { username, password });
       return response.data;
     },
     onSuccess: (data) => {
