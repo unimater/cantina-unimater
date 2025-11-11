@@ -9,31 +9,31 @@ datasource db {
 }
 
 model Produto {
-  id        String  @id @default(cuid())
-  descricao String
-  valor     Decimal
-  situacao  Boolean
-  imagem    String?
+  id          String      @id @default(cuid())
+  descricao   String
+  valor       Decimal
+  situacao    Boolean
+  imagem      String?
 
-  categoria   Categoria @relation(fields: [categoriaId], references: [id])
-  categoriaId String    @map("categoria_id")
+  categoria   Categoria   @relation(fields: [categoriaId], references: [id])
+  categoriaId String      @map("categoria_id")
 
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime?   @updatedAt      @map("updated_at")
 
-  itens PedidoItem[]
+  itens       PedidoItem[]
 }
 
 model Categoria {
-  id        String        @id @default(cuid())
-  descricao String
-  tipo      TipoCategoria
-  situacao  Boolean
+  id          String        @id @default(cuid())
+  descricao   String
+  tipo        TipoCategoria
+  situacao    Boolean
 
-  produtos Produto[]
+  produtos    Produto[]
 
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt      @map("updated_at")
 }
 
 enum TipoCategoria {
@@ -49,74 +49,74 @@ model Despesa {
   fornecedor  String?
   observacoes String?
 
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt      @map("updated_at")
 }
 
 model User {
-  id       String  @id @default(cuid())
-  cpf      String  @unique @db.VarChar(20)
-  name     String  @db.VarChar(200)
-  username String  @unique @db.VarChar(100)
-  password String  @db.VarChar(200)
-  email    String? @db.VarChar(200)
-  phone    String? @db.VarChar(20)
-  active   Boolean @default(true)
+  id              String     @id @default(cuid())
+  cpf             String     @unique @db.VarChar(20)
+  name            String     @db.VarChar(200)
+  username        String     @unique @db.VarChar(100)
+  password        String     @db.VarChar(200)
+  email           String?    @db.VarChar(200)
+  phone           String?    @db.VarChar(20)
+  active          Boolean    @default(true)
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime?  @updatedAt
 
   resetToken       String?
   resetTokenExpiry DateTime?
 
-  pedidos Pedido[]
+  pedidos         Pedido[]
 }
 
 model FormasPagamento {
-  id     String  @id @default(cuid())
-  name   String
-  status Boolean @default(true)
+  id          String     @id @default(cuid())
+  name        String
+  status      Boolean    @default(true)
 
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime?  @updatedAt      @map("updated_at")
 
-  pedidos Pedido[]
+  pedidos     Pedido[]
 }
 
 model Pedido {
-  id                 String       @id @default(cuid())
+  id                 String           @id @default(cuid())
   descricao          String
   total              Decimal
   categoria          String?
   situacao           Boolean?
-  status             StatusPedido @default(FINALIZADO)
-  dataPedido         DateTime     @default(now())
+  status             StatusPedido     @default(FINALIZADO)
+  dataPedido         DateTime         @default(now())
   motivoCancelamento String?
   dataCancelamento   DateTime?
 
-  usuarioId String? @map("usuario_id")
-  usuario   User?   @relation(fields: [usuarioId], references: [id])
+  usuarioId          String?          @map("usuario_id")
+  usuario            User?            @relation(fields: [usuarioId], references: [id])
 
-  formaPagamentoId String?          @map("forma_pagamento_id")
-  formaPagamento   FormasPagamento? @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamentoId   String?          @map("forma_pagamento_id")
+  formaPagamento     FormasPagamento? @relation(fields: [formaPagamentoId], references: [id])
 
-  itens PedidoItem[]
+  itens              PedidoItem[]     // 🟢 Relacionamento direto com os itens
 
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime?        @updatedAt      @map("updated_at")
 }
 
 model PedidoItem {
-  id            String  @id @default(cuid())
-  quantidade    Int
-  precoUnitario Decimal
-  subtotal      Decimal
+  id             String   @id @default(cuid())
+  quantidade     Int
+  precoUnitario  Decimal
+  subtotal       Decimal
 
-  produtoId String
-  produto   Produto @relation(fields: [produtoId], references: [id])
+  produtoId      String
+  produto        Produto @relation(fields: [produtoId], references: [id])
 
-  pedidoId String
-  pedido   Pedido @relation(fields: [pedidoId], references: [id])
+  pedidoId       String
+  pedido         Pedido  @relation(fields: [pedidoId], references: [id])
 }
 
 enum StatusPedido {

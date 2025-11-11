@@ -1,15 +1,15 @@
-import { Button } from '@/components/ui/button'
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { toast } from 'sonner'
-import { Switch } from '@/components/ui/switch'
-import { pedidoSchema } from '@/lib/PedidoSchema'
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import { Switch } from "@/components/ui/switch"
 import {
   Form,
   FormControl,
@@ -17,16 +17,29 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import type { Pedido } from '@/type/Pedido'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import axios from 'axios'
+} from "@/components/ui/form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm, useFieldArray } from "react-hook-form"
+import { z } from "zod"
+import axios from "axios"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { Pedido } from "@/type/Pedido"
 
-// ✅ Mesmo tipo usado no CriarPedido
+// ✅ Schema de validação com Zod
+const itemSchema = z.object({
+  produtoId: z.string().min(1, "Produto obrigatório"),
+  quantidade: z.number().min(1, "Mínimo 1 unidade"),
+  precoUnitario: z.number().min(0, "Preço inválido"),
+  subtotal: z.number(),
+})
+
+const pedidoSchema = z.object({
+  descricao: z.string().min(1, "Descrição obrigatória"),
+  categoria: z.enum(["PRODUTO", "DESPESA"]),
+  situacao: z.boolean(),
+  itens: z.array(itemSchema).min(1, "Adicione ao menos 1 item"),
+})
+
 type FormValues = z.infer<typeof pedidoSchema>
 
 interface EditarPedidoProps {
@@ -38,65 +51,80 @@ interface EditarPedidoProps {
 const EditarPedido: React.FC<EditarPedidoProps> = ({
   pedido,
   onPedidoAtualizado,
-  pedidosExistentes,
 }) => {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
-  // ✅ Tipagem explícita — remove o erro do onSubmit
   const form = useForm<FormValues>({
     resolver: zodResolver(pedidoSchema),
     defaultValues: {
-      descricao: pedido.descricao || '',
-      total: Number(pedido.total) || 0,
-      categoria: (pedido.categoria as 'PRODUTO' | 'DESPESA') || 'PRODUTO',
+      descricao: pedido.descricao,
+      categoria: (pedido.categoria as "PRODUTO" | "DESPESA") || "PRODUTO",
       situacao: pedido.situacao ?? true,
+      itens:
+        pedido.itens?.map((item) => ({
+          produtoId: item.produtoId,
+          quantidade: Number(item.quantidade),
+          precoUnitario: Number(item.precoUnitario),
+          subtotal: Number(item.subtotal),
+        })) ?? [],
     },
   })
 
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "itens",
+  })
+
+  // ✅ Corrige o erro de tipagem aqui
+  const itens = form.watch("itens") as {
+    produtoId: string
+    quantidade: number
+    precoUnitario: number
+    subtotal: number
+  }[]
+
+  const { setValue } = form
+
+  // 🔹 Atualiza subtotais automaticamente
+  useEffect(() => {
+    itens.forEach((item, index) => {
+      const subtotal = item.quantidade * item.precoUnitario
+      setValue(`itens.${index}.subtotal`, subtotal)
+    })
+  }, [itens, setValue])
+
+  // 🔹 Calcula total geral
+  const total = itens.reduce((acc, item) => acc + item.subtotal, 0)
+
   const updateMutation = useMutation({
-    mutationFn: async (dadosAtualizados: Partial<Pedido>) => {
+    mutationFn: async (data: FormValues) => {
       const response = await axios.patch(
         `http://localhost:3000/pedido/${pedido.id}`,
-        dadosAtualizados
+        { ...data, total }
       )
       return response.data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['getPedidos'] })
-      onPedidoAtualizado()
-      toast.success('Sucesso!', {
-        description: 'O pedido foi atualizado com sucesso.',
-      })
+      queryClient.invalidateQueries({ queryKey: ["getPedidos"] })
+      toast.success("Pedido atualizado com sucesso!")
       setOpen(false)
+      onPedidoAtualizado()
     },
     onError: (error: any) => {
-      const message =
-        error?.response?.data?.message || 'Não foi possível atualizar o pedido.'
-      toast.error('Erro ao atualizar pedido', { description: message })
+      toast.error("Erro ao atualizar pedido", {
+        description:
+          error.response?.data?.message || "Falha ao salvar o pedido.",
+      })
     },
   })
 
   const onSubmit = (data: FormValues) => {
-    const descricaoDuplicada = pedidosExistentes.some(
-      p =>
-        p.descricao.toLowerCase() === data.descricao.toLowerCase() &&
-        p.id !== pedido.id
-    )
-
-    if (descricaoDuplicada) {
-      toast.error('Já existe um pedido com essa descrição.')
+    if (data.itens.length === 0) {
+      toast.error("Adicione pelo menos um item ao pedido.")
       return
     }
-
-    const pedidoAtualizado = {
-      descricao: data.descricao,
-      total: Number(data.total),
-      categoria: data.categoria,
-      situacao: data.situacao,
-    }
-
-    updateMutation.mutate(pedidoAtualizado)
+    updateMutation.mutate(data)
   }
 
   return (
@@ -107,13 +135,13 @@ const EditarPedido: React.FC<EditarPedidoProps> = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Editar Pedido</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Descrição */}
             <FormField
               control={form.control}
@@ -122,27 +150,7 @@ const EditarPedido: React.FC<EditarPedidoProps> = ({
                 <FormItem>
                   <FormLabel>Descrição *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Digite a descrição do pedido" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Valor */}
-            <FormField
-              control={form.control}
-              name="total"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valor *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Digite o valor total do pedido"
-                      {...field}
-                      onChange={e => field.onChange(Number(e.target.value))}
-                    />
+                    <Input {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -157,12 +165,9 @@ const EditarPedido: React.FC<EditarPedidoProps> = ({
                 <FormItem>
                   <FormLabel>Categoria *</FormLabel>
                   <FormControl>
-                    <select
-                      className="w-full rounded border px-3 py-2"
-                      {...field}
-                    >
-                      <option value="PRODUTO">PRODUTO</option>
-                      <option value="DESPESA">DESPESA</option>
+                    <select {...field} className="w-full rounded border px-3 py-2">
+                      <option value="PRODUTO">Produto</option>
+                      <option value="DESPESA">Despesa</option>
                     </select>
                   </FormControl>
                 </FormItem>
@@ -177,26 +182,83 @@ const EditarPedido: React.FC<EditarPedidoProps> = ({
                 name="situacao"
                 render={({ field }) => (
                   <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                 )}
               />
-            </div>  
+              <span>{form.watch("situacao") ? "Ativo" : "Inativo"}</span>
+            </div>
+
+            {/* Itens do Pedido */}
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <FormLabel>Itens do Pedido</FormLabel>
+                <Button
+                  type="button"
+                  onClick={() =>
+                    append({
+                      produtoId: "",
+                      quantidade: 1,
+                      precoUnitario: 0,
+                      subtotal: 0,
+                    })
+                  }
+                >
+                  + Adicionar Item
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-5 gap-2 items-center">
+                  <Input
+                    placeholder="Produto ID"
+                    {...form.register(`itens.${index}.produtoId`)}
+                    className="col-span-2"
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Qtd"
+                    {...form.register(`itens.${index}.quantidade`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Preço"
+                    {...form.register(`itens.${index}.precoUnitario`, { valueAsNumber: true })}
+                  />
+                  <Input
+                    type="number"
+                    readOnly
+                    value={itens[index]?.subtotal?.toFixed(2) || "0.00"}
+                    className="bg-gray-100"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => remove(index)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Total */}
+            <div className="flex justify-end items-center gap-2 pt-4">
+              <span className="text-gray-700 font-semibold">Total:</span>
+              <span className="text-lg font-bold">
+                R$ {total.toFixed(2).replace(".", ",")}
+              </span>
+            </div>
 
             {/* Botões */}
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar
               </Button>
               <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
+                {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
               </Button>
             </div>
           </form>

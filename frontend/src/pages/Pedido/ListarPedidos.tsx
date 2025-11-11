@@ -5,161 +5,244 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import CriarPedido from './CriarPedido';
-import EditarPedido from './EditarPedido';
-import { toast } from 'sonner';
-import type { Pedido } from '@/type/Pedido';
-
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+} from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Search } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import CriarPedido from './CriarPedido'
+import EditarPedido from './EditarPedido'
+import { toast } from 'sonner'
+import type { Pedido } from '@/type/Pedido'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
+import { motion, AnimatePresence } from 'framer-motion' // ✨ animações suaves
 
 const ListarPedido: React.FC = () => {
-  const [filtro, setFiltro] = useState('');
-  const queryClient = useQueryClient();
+  const [filtro, setFiltro] = useState('')
+  const [statusFiltro, setStatusFiltro] = useState<string>('')
+  const [dataInicio, setDataInicio] = useState('')
+  const [dataFim, setDataFim] = useState('')
+  const queryClient = useQueryClient()
 
-  const { data: pedidos = [], error } = useQuery({
-    queryKey: ['getPedidos'],
+  // 🔹 Busca pedidos com filtros
+  const { data: pedidos = [], error, isFetching } = useQuery({
+    queryKey: ['getPedidos', filtro, statusFiltro, dataInicio, dataFim],
     queryFn: async () => {
-      const response = await axios.get('http://localhost:3000/pedido');
-      return response.data as Pedido[];
+      const params: Record<string, string> = {}
+      if (statusFiltro) params.status = statusFiltro
+      if (dataInicio) params.dataInicio = dataInicio
+      if (dataFim) params.dataFim = dataFim
+      const response = await axios.get('http://localhost:3000/pedido', { params })
+      return response.data as Pedido[]
     },
-  });
+  })
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`http://localhost:3000/pedido/${id}`);
+      await axios.delete(`http://localhost:3000/pedido/${id}`)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['getPedidos'] });
-      toast.success('Pedido excluído com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['getPedidos'] })
+      toast.success('Pedido excluído com sucesso!')
     },
-    onError: (error: { response: { data: { message: string } } }) => {
+    onError: (error: any) => {
       toast.error('Erro ao excluir pedido', {
-        description: error.response?.data?.message || 'Não foi possível excluir o pedido.',
-      });
+        description:
+          error.response?.data?.message ||
+          'Não foi possível excluir o pedido.',
+      })
     },
-  });
+  })
 
   useEffect(() => {
     if (error) {
       toast.error('Erro ao carregar pedidos', {
         description: (error as Error).message,
-      });
+      })
     }
-  }, [error]);
+  }, [error])
 
-  const handleCriar = () => {
-    queryClient.invalidateQueries({ queryKey: ['getPedidos'] });
-  };
-
-  const handleAtualizar = () => {
-    queryClient.invalidateQueries({ queryKey: ['getPedidos'] });
-  };
+  const handleCriar = () => queryClient.invalidateQueries({ queryKey: ['getPedidos'] })
+  const handleAtualizar = () => queryClient.invalidateQueries({ queryKey: ['getPedidos'] })
 
   const handleExcluir = (id: string) => {
     if (confirm('Tem certeza que deseja excluir este pedido?')) {
-      deleteMutation.mutate(id);
+      deleteMutation.mutate(id)
     }
-  };
+  }
+
+  const handleLimparFiltros = () => {
+    setFiltro('')
+    setStatusFiltro('')
+    setDataInicio('')
+    setDataFim('')
+  }
 
   const pedidosFiltrados = pedidos.filter(p =>
     p.descricao?.toLowerCase().includes(filtro.toLowerCase())
-  );
+  )
 
   return (
-    <Card>
-      <CardHeader>
-        <div className='flex flex-col justify-between gap-4 md:flex-row md:items-center'>
-          <CardTitle>Pedidos</CardTitle>
-          <div className='flex flex-col gap-4 sm:flex-row'>
-            <div className='relative'>
-              <Search className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
+      <Card className="shadow-lg border-gray-200">
+        <CardHeader>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <CardTitle className="text-xl font-semibold text-gray-800">
+              Pedidos
+            </CardTitle>
+
+            {/* 🔹 Área de filtros */}
+            <div className="flex flex-wrap items-center gap-3 bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm">
+              {/* 🔍 Filtro por descrição */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="text-gray-400 absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Input
+                  placeholder="Buscar descrição..."
+                  value={filtro}
+                  onChange={e => setFiltro(e.target.value)}
+                  className="pl-9 pr-3 py-2 h-9 text-sm"
+                />
+              </div>
+
+              {/* 📅 Filtro de data início */}
               <Input
-                placeholder='Filtrar por descrição...'
-                value={filtro}
-                onChange={e => setFiltro(e.target.value)}
-                maxLength={150}
-                className='pl-10'
+                type="date"
+                value={dataInicio}
+                onChange={e => setDataInicio(e.target.value)}
+                className="w-[150px] h-9 text-sm"
+                title="Data Inicial"
+              />
+
+              {/* 📅 Filtro de data fim */}
+              <Input
+                type="date"
+                value={dataFim}
+                onChange={e => setDataFim(e.target.value)}
+                className="w-[150px] h-9 text-sm"
+                title="Data Final"
+              />
+
+              {/* 🏷️ Filtro de status */}
+              <select
+                value={statusFiltro}
+                onChange={e => setStatusFiltro(e.target.value)}
+                className="h-9 rounded-md border border-gray-300 px-3 text-sm bg-white"
+              >
+                <option value="">Todos</option>
+                <option value="FINALIZADO">Finalizados</option>
+                <option value="CANCELADO">Cancelados</option>
+              </select>
+
+              {/* ❌ Limpar filtros */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-gray-700 border-gray-300 hover:bg-gray-100"
+                onClick={handleLimparFiltros}
+              >
+                Limpar
+              </Button>
+
+              {/* ➕ Novo Pedido */}
+              <CriarPedido
+                onPedidoCriado={handleCriar}
+                pedidosExistentes={pedidos}
               />
             </div>
-            <CriarPedido
-              onPedidoCriado={handleCriar}
-              pedidosExistentes={pedidos}
-            />
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Valor Total</TableHead>
-              <TableHead>Situação</TableHead>
-              <TableHead className='text-right'>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pedidosFiltrados.length > 0 ? (
-              pedidosFiltrados.map(pedido => (
-                <TableRow key={`pedido-${pedido.id}`}>
-                  <TableCell>{pedido.descricao}</TableCell>
+        </CardHeader>
 
-                  {/* ✅ Campo corrigido e formatado */}
-                  <TableCell>
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(Number(pedido.total || 0))}
-                  </TableCell>
-
-                  <TableCell>
-                    <span
-                      className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                        pedido.situacao ? 'bg-green-500' : 'bg-red-500'
-                      }`}
-                    />
-                    {pedido.situacao ? 'Ativo' : 'Inativo'}
-                  </TableCell>
-                  <TableCell className='space-x-2 text-right'>
-                    <EditarPedido
-                      key={`editar-pedido-${pedido.id}`}
-                      pedido={pedido}
-                      onPedidoAtualizado={handleAtualizar}
-                      pedidosExistentes={pedidos}
-                    />
-                    <Button
-                      variant='destructive'
-                      size='sm'
-                      onClick={() => pedido.id && handleExcluir(pedido.id)}
-                      className='cursor-pointer'
-                    >
-                      Excluir
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className='text-muted-foreground py-6 text-center'
-                >
-                  Nenhum pedido encontrado.
-                </TableCell>
+                <TableHead>Descrição</TableHead>
+                <TableHead>Valor Total</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Situação</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-};
+            </TableHeader>
 
-export default ListarPedido;
+            <TableBody>
+              <AnimatePresence>
+                {isFetching ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-6">
+                      Carregando pedidos...
+                    </TableCell>
+                  </TableRow>
+                ) : pedidosFiltrados.length > 0 ? (
+                  pedidosFiltrados.map(pedido => (
+                    <motion.tr
+                      key={`pedido-${pedido.id}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="border-b hover:bg-gray-50 transition"
+                    >
+                      <TableCell>{pedido.descricao}</TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL',
+                        }).format(Number(pedido.total || 0))}
+                      </TableCell>
+                      <TableCell>{pedido.status}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`mr-2 inline-block h-2 w-2 rounded-full ${
+                            pedido.situacao ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                        />
+                        {pedido.situacao ? 'Ativo' : 'Inativo'}
+                      </TableCell>
+                      <TableCell className="space-x-2 text-right">
+                        <EditarPedido
+                          key={`editar-pedido-${pedido.id}`}
+                          pedido={pedido}
+                          onPedidoAtualizado={handleAtualizar}
+                          pedidosExistentes={pedidos}
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => pedido.id && handleExcluir(pedido.id)}
+                          className="cursor-pointer"
+                        >
+                          Excluir
+                        </Button>
+                      </TableCell>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <motion.tr
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-6 text-gray-500"
+                    >
+                      Nenhum pedido encontrado.
+                    </TableCell>
+                  </motion.tr>
+                )}
+              </AnimatePresence>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+
+export default ListarPedido
