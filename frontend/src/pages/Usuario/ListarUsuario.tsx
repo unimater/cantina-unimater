@@ -10,48 +10,65 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CriarUsuario from './CriarUsuario';
 import EditarUsuario from './EditarUsuario';
 import type { Usuario } from '@/type/Usuario';
 import { toast } from 'sonner';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
 
 const ListarUsuarios: React.FC = () => {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([
-    {
-      id: 1,
-      nome: 'Ana Silva',
-      situacao: true,
-      email: 'ana@faculdade.edu',
-      telefone: '(11) 91234-5678',
-      usuario: 'ana.silva',
-      senha: 'hashed',
-    },
-  ]);
-
   const [filtro, setFiltro] = useState('');
+  const queryClient = useQueryClient();
 
-  const handleCriar = (novoUsuario: Usuario) => {
-    setUsuarios(prev => [...prev, novoUsuario]);
+  const { data: usuarios = [], error } = useQuery({
+    queryKey: ['getUsuarios'],
+    queryFn: async () => {
+      const response = await api.get('http://localhost:3000/users');
+      return response.data as Usuario[];
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`http://localhost:3000/users/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getUsuarios'] });
+      toast.success('Usuário excluído com sucesso!');
+    },
+    onError: (error: { response: { data: { message: string } } }) => {
+      toast.error('Erro ao excluir categoria', {
+        description: error.response?.data?.message || 'Não foi possível atualizar a categoria.',
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast.error('Erro ao carregar usuários', {
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  const handleCriar = () => {
+    queryClient.invalidateQueries({ queryKey: ['getUsuarios'] });
   };
 
-  const handleAtualizar = (usuarioAtualizado: Usuario) => {
-    setUsuarios(prev => prev.map(u => (u.id === usuarioAtualizado.id ? usuarioAtualizado : u)));
+  const handleAtualizar = () => {
+    queryClient.invalidateQueries({ queryKey: ['getUsuarios'] });
   };
 
-  const handleExcluir = (id: number) => {
-    if (
-      confirm(
-        'Ao excluir o item não será possível reverter. Deseja realmente prosseguir com a ação?'
-      )
-    ) {
-      setUsuarios(prev => prev.filter(u => u.id !== id));
-      toast.success('Excluído', { description: 'O usuário foi removido com sucesso.' });
+  const handleExcluir = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir este usuário?')) {
+      deleteMutation.mutate(id);
     }
   };
 
   const usuariosFiltrados = usuarios.filter(u =>
-    u.nome.toLowerCase().includes(filtro.toLowerCase())
+    u.name.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
@@ -92,14 +109,14 @@ const ListarUsuarios: React.FC = () => {
               usuariosFiltrados.map(usuario => (
                 <TableRow key={usuario.id}>
                   <TableCell className='font-mono text-sm'>{usuario.id}</TableCell>
-                  <TableCell>{usuario.nome}</TableCell>
+                  <TableCell>{usuario.name}</TableCell>
                   <TableCell>
                     <span
                       className={`mr-2 inline-block h-2 w-2 rounded-full ${
-                        usuario.situacao ? 'bg-green-500' : 'bg-red-500'
+                        usuario.active ? 'bg-green-500' : 'bg-red-500'
                       }`}
                     />
-                    {usuario.situacao ? 'Ativo' : 'Inativo'}
+                    {usuario.active ? 'Ativo' : 'Inativo'}
                   </TableCell>
                   <TableCell className='space-x-2 text-right'>
                     <EditarUsuario
@@ -110,7 +127,7 @@ const ListarUsuarios: React.FC = () => {
                     <Button
                       variant='destructive'
                       size='sm'
-                      onClick={() => handleExcluir(usuario.id)}
+                      onClick={() => handleExcluir(usuario.id!)}
                     >
                       Excluir
                     </Button>

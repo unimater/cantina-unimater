@@ -23,9 +23,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { Despesa } from '@/type/Despesa';
-import axios from 'axios';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
+import api from '@/api/api';
 
 const despesaSchema = z.object({
   descricao: z.string().min(1, 'Descrição é obrigatória').max(100, 'Máximo de 100 caracteres'),
@@ -81,7 +81,7 @@ const EditarDespesa = ({ despesa }: EditarDespesaProps) => {
       valor: string;
       data: string;
       observacoes: string;
-    }) => axios.patch(`http://localhost:3000/despesas/${despesa.id}`, despesaAtualizada),
+    }) => api.patch(`http://localhost:3000/despesas/${despesa.id}`, despesaAtualizada),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['getDespesas'],

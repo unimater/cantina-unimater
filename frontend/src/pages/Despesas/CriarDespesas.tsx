@@ -19,11 +19,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import api from '@/api/api';
 
 const despesaSchema = z.object({
   descricao: z.string().min(1, 'Descrição é obrigatória').max(100, 'Máximo de 100 caracteres'),
@@ -73,7 +73,7 @@ const CriarDespesa = () => {
       valor: string;
       data: string;
       observacoes: string;
-    }) => axios.post('http://localhost:3000/despesas', despesa),
+    }) => api.post('http://localhost:3000/despesas', despesa),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ['getDespesas'],

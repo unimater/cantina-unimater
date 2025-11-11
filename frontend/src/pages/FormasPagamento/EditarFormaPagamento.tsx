@@ -20,11 +20,11 @@ import { Switch } from '@/components/ui/switch';
 import type { FormaPagamento } from '@/type/FormaPagamento';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import api from '@/api/api';
 
 // Schema de validação
 const pagamentoSchema = z.object({
@@ -49,7 +49,7 @@ const EditarFormaPagamento: React.FC<EditarPagamentoProps> = ({ formaPagamento }
 
   const updateMutation = useMutation({
     mutationFn: async (formaPagamentoAtualizada: FormaPagamento) => {
-      const response = await axios.patch(
+      const response = await api.patch(
         `http://localhost:3000/formas-pagamento/${formaPagamento.id}`,
         formaPagamentoAtualizada
       );

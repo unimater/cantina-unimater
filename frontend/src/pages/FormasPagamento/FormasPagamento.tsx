@@ -11,12 +11,12 @@ import {
 } from '@/components/ui/table';
 import type { FormaPagamento } from '@/type/FormaPagamento.ts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CriarPagamento from './CriarFormaPagamento.tsx';
 import EditarFormaPagamento from './EditarFormaPagamento.tsx';
+import api from '@/api/api.ts';
 
 const FormasPagamento: React.FC = () => {
   const [filtro, setFiltro] = useState('');
@@ -25,14 +25,14 @@ const FormasPagamento: React.FC = () => {
   const { data: formasPagamento } = useQuery({
     queryKey: ['getFormasPagamento'],
     queryFn: async () => {
-      const response = await axios.get('http://localhost:3000/formas-pagamento');
+      const response = await api.get('http://localhost:3000/formas-pagamento');
       return response.data as FormaPagamento[];
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`http://localhost:3000/formas-pagamento/${id}`);
+      await api.delete(`http://localhost:3000/formas-pagamento/${id}`);
     },
     onSuccess: () => {
       toast.success('Forma de pagamento excluída com sucesso!');
@@ -48,8 +48,6 @@ const FormasPagamento: React.FC = () => {
   const handleExcluir = (id: string) => {
     deleteMutation.mutate(id);
   };
-
-  console.log(formasPagamento);
 
   const formasFiltradas = useMemo(
     () => formasPagamento?.filter(c => c.name?.toLowerCase().includes(filtro.toLowerCase())),

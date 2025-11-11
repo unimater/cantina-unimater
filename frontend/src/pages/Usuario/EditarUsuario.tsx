@@ -22,10 +22,12 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { usuarioSchema } from '@/lib/UsuarioSchema';
+import { usuarioSchemaEditar } from '@/lib/UsuarioSchema';
 import type { Usuario } from '@/type/Usuario';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
 
-type FormValues = z.infer<typeof usuarioSchema>;
+type FormValues = z.infer<typeof usuarioSchemaEditar>;
 
 interface EditarUsuarioProps {
   usuario: Usuario;
@@ -40,15 +42,39 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
+  const queryClient = useQueryClient();
+
+  const updateMutation = useMutation({
+    mutationFn: async (usuarioAtualizado: Usuario) => {
+      const response = await api.patch( `http://localhost:3000/users/${usuario.id}`, usuarioAtualizado);
+      return response.data;
+    },
+    onSuccess: usuarioAtualizadoDoBackend => {
+      queryClient.invalidateQueries({ queryKey: ['getUsuarios'] });
+      onUsuarioAtualizado(usuarioAtualizadoDoBackend);
+      toast.success('Sucesso!', {
+        description: 'O usuário foi atualizado com sucesso.',
+      });
+      form.reset();
+      setOpen(false);
+    },
+    onError: (error: { response: { data: { message: string } } }) => {
+      const message = error.response?.data?.message || 'Não foi possível atualizar o usuário.';
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
 
   const form = useForm({
-    resolver: zodResolver(usuarioSchema),
+    resolver: zodResolver(usuarioSchemaEditar),
     defaultValues: {
-      nome: usuario.nome || '',
-      situacao: usuario.situacao ?? true,
+      nome: usuario.name || '',
+      cpf: usuario.cpf || '',
+      situacao: usuario.active ?? true,
       email: usuario.email || '',
-      telefone: usuario.telefone || '',
-      usuario: usuario.usuario || '',
+      telefone: usuario.phone || '',
+      usuario: usuario.username || '',
       senha: '',
       confirmarSenha: '',
     },
@@ -62,6 +88,21 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
     setTemAlteracao(tem);
   }, [campos]);
 
+  useEffect(() => {
+  if (usuario) {
+    form.reset({
+      nome: usuario.name || '',
+      cpf: usuario.cpf || '',
+      situacao: usuario.active ?? true,
+      email: usuario.email || '',
+      telefone: usuario.phone || '',
+      usuario: usuario.username || '',
+      senha: '',
+      confirmarSenha: '',
+    });
+  }
+}, [usuario, form]);
+
   const onSubmit = (data: FormValues) => {
     const nomeNormalizado = (str: string) =>
       str
@@ -72,7 +113,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
 
     const nomeDuplicado = usuariosExistentes
       .filter(u => u.id !== usuario.id)
-      .some(u => nomeNormalizado(u.nome) === nomeNormalizado(data.nome));
+      .some(u => nomeNormalizado(u.name) === nomeNormalizado(data.nome));
 
     if (nomeDuplicado) {
       toast.error('Não foi possível salvar o registro!', {
@@ -83,7 +124,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
 
     const loginDuplicado = usuariosExistentes
       .filter(u => u.id !== usuario.id)
-      .some(u => u.usuario === data.usuario);
+      .some(u => u.username === data.usuario);
 
     if (loginDuplicado) {
       toast.error('Não foi possível salvar o registro!', {
@@ -92,21 +133,23 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
       return;
     }
 
+    const { password: senhaOmitida, ...usuarioSemSenha } = usuario;
+
     const usuarioAtualizado: Usuario = {
-      ...usuario,
-      nome: data.nome,
-      situacao: data.situacao,
+      ...usuarioSemSenha,
+      name: data.nome,
+      cpf: data.cpf,
+      active: data.situacao,
       email: data.email || undefined,
-      telefone: data.telefone || undefined,
-      usuario: data.usuario,
-      senha: data.senha || usuario.senha,
+      phone: data.telefone || undefined,
+      username: data.usuario,
     };
 
-    onUsuarioAtualizado(usuarioAtualizado);
-    toast.success('Sucesso!', {
-      description: 'O usuário foi atualizado com sucesso.',
-    });
-    setOpen(false);
+    if (data.senha && data.senha.trim() !== '') {
+      usuarioAtualizado.password = data.senha;
+    }
+
+    updateMutation.mutate(usuarioAtualizado);
   };
 
   return (
@@ -138,7 +181,7 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className='space-y-6'
+            className='space-y-2'
           >
             <div className='space-y-4 rounded-lg border p-4'>
               <h3 className='text-lg font-semibold'>Identificação</h3>
@@ -151,6 +194,23 @@ const EditarUsuario: React.FC<EditarUsuarioProps> = ({
                     <FormLabel>Nome *</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='cpf'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='000.000.000-00'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

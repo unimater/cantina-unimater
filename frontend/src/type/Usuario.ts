@@ -1,9 +1,11 @@
 export interface Usuario {
-  id: number;
-  nome: string;
-  situacao: boolean;
+  id?: string;
+  cpf?: string;
+  name: string;
+  username: string;
+  password?: string;
   email?: string;
-  telefone?: string;
-  usuario: string;
-  senha: string;
+  phone?: string;
+  active?: boolean;
+  token?: string;
 }
