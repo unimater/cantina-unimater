@@ -23,6 +23,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Categoria } from '@/type/Categoria';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -36,6 +38,34 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
   categoriasExistentes,
 }) => {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: async (novaCategoria: Omit<Categoria, 'id'>) => {
+      const response = await axios.post('http://localhost:3000/categorias', novaCategoria);
+      return response.data;
+    },
+    onSuccess: categoriaCriada => {
+      queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
+      onCategoriaCriada(categoriaCriada);
+      toast.success('Sucesso!', {
+        description: 'A categoria foi incluída com sucesso.',
+      });
+      form.reset({
+        descricao: '',
+        tipo: 'PRODUTO',
+        situacao: true,
+      });
+      setOpen(false);
+    },
+    onError: (error: { response: { data: { message: string } } }) => {
+      const message = error.response?.data?.message || 'Não foi possível atualizar a categoria.';
+
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
 
   const form = useForm({
     resolver: zodResolver(categoriaSchema),
@@ -65,24 +95,13 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
       return;
     }
 
-    const novaCategoria: Categoria = {
-      id: Date.now(),
+    const novaCategoria = {
       descricao: data.descricao,
       tipo: data.tipo,
       situacao: data.situacao,
     };
 
-    onCategoriaCriada(novaCategoria);
-    toast.success('Sucesso!', {
-      description: 'A categoria foi incluída com sucesso.',
-    });
-
-    form.reset({
-      descricao: '',
-      tipo: 'PRODUTO',
-      situacao: true,
-    });
-    setOpen(false);
+    createMutation.mutate(novaCategoria);
   };
 
   const handleCancelar = () => {
@@ -180,10 +199,10 @@ const CriarCategoria: React.FC<CriarCategoriaProps> = ({
               </Button>
               <Button
                 type='submit'
-                disabled={form.formState.isSubmitting}
+                disabled={createMutation.isPending}
                 className='cursor-pointer'
               >
-                {form.formState.isSubmitting ? 'Salvando...' : 'Salvar'}
+                {createMutation.isPending ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>
           </form>

@@ -7,8 +7,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
 import {
   Form,
   FormControl,
@@ -17,49 +15,47 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
-import type { Despesa } from '@/type/Despesa';
 
-// Schema Despesa
 const despesaSchema = z.object({
-  descricao: z
+  descricao: z.string().min(1, 'Descrição é obrigatória').max(100, 'Máximo de 100 caracteres'),
+  fornecedor: z.string().min(1, 'Fornecedor é obrigatório').max(100, 'Máximo de 100 caracteres'),
+  valor: z
     .string()
-    .min(1, 'Descrição é obrigatória')
-    .max(100, 'Máximo de 100 caracteres'),
-  categoria: z.string().min(1, 'Categoria é obrigatória'),
-  data: z
-    .string()
-    .refine(value => {
-      const data = new Date(value);
-      const hoje = new Date();
-      return data <= hoje;
-    }, 'Não é permitido registrar uma data futura.'),
+    .min(1, 'Valor é obrigatório')
+    .refine(value => !isNaN(Number(value.replace(',', '.'))), 'Valor inválido'),
+  data: z.string().refine(value => {
+    const data = new Date(value);
+    const hoje = new Date();
+    return data <= hoje;
+  }, 'Não é permitido registrar uma data futura.'),
+  observacoes: z.string().max(500, 'Máximo de 500 caracteres').optional(),
 });
 
 type FormValues = z.infer<typeof despesaSchema>;
-interface CriarDespesaProps {
-  onDespesaCriada: (despesa: Despesa) => void;
-  despesasExistentes: Despesa[];
-  usuarioAtual: string; // profissional responsável
-}
 
-const CriarDespesa: React.FC<CriarDespesaProps> = ({
-  onDespesaCriada,
-  despesasExistentes,
-  usuarioAtual,
-}) => {
+const CriarDespesa = () => {
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(despesaSchema),
     defaultValues: {
       descricao: '',
-      categoria: '',
+      fornecedor: '',
+      valor: '',
       data: new Date().toISOString().split('T')[0],
+      observacoes: '',
     },
   });
 
@@ -70,43 +66,34 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
     setTemAlteracao(tem);
   }, [campos]);
 
-  const onSubmit = (data: FormValues) => {
-    const descricaoNormalizada = (str: string) =>
-      str
-        .trim()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-    const duplicada = despesasExistentes.some(
-      u => descricaoNormalizada(u.descricao) === descricaoNormalizada(data.descricao)
-    );
-
-    if (duplicada) {
-      toast.error('Não foi possível salvar!', {
-        description: 'Já existe uma despesa com a mesma descrição.',
+  const mutation = useMutation({
+    mutationFn: (despesa: {
+      descricao: string;
+      fornecedor: string;
+      valor: string;
+      data: string;
+      observacoes: string;
+    }) => axios.post('http://localhost:3000/despesas', despesa),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['getDespesas'],
       });
-      return;
-    }
 
-    // Gera ID sequencial
-    const proximoId =
-      despesasExistentes.length > 0
-        ? Math.max(...despesasExistentes.map(d => d.id)) + 1
-        : 0;
+      toast.success('Sucesso!', {
+        description: 'A despesa foi incluída com sucesso.',
+      });
+    },
+  });
 
-    const novaDespesa: Despesa = {
-      id: proximoId,
+  const onSubmit = (data: FormValues) => {
+    mutation.mutate({
       descricao: data.descricao,
-      categoria: data.categoria,
+      fornecedor: data.fornecedor,
+      valor: data.valor.replace(',', '.'),
       data: data.data,
-      usuario: usuarioAtual,
-    };
-
-    onDespesaCriada(novaDespesa);
-    toast.success('Sucesso!', {
-      description: 'A despesa foi incluída com sucesso.',
+      observacoes: data.observacoes || '',
     });
+
     form.reset();
     setOpen(false);
   };
@@ -129,40 +116,25 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
         <Button>Nova Despesa</Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-screen max-w-2xl overflow-y-auto">
+      <DialogContent className='max-h-screen max-w-2xl overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Cadastrar Despesa</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4 rounded-lg border p-4">
-              <h3 className="text-lg font-semibold">Identificação</h3>
-
-              {/* Identificador (bloqueado) */}
-              <FormItem>
-                <FormLabel>ID</FormLabel>
-                <FormControl>
-                  <Input
-                    value={
-                      despesasExistentes.length > 0
-                        ? Math.max(...despesasExistentes.map(d => d.id)) + 1
-                        : 0
-                    }
-                    disabled
-                  />
-                </FormControl>
-              </FormItem>
-
-              {/* Descrição */}
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className='space-y-6'
+          >
+            <div className='space-y-4 rounded-lg border p-4'>
               <FormField
                 control={form.control}
-                name="descricao"
+                name='descricao'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Descrição *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Digite a descrição completa"
+                        placeholder='Digite a descrição da despesa'
                         maxLength={100}
                         {...field}
                       />
@@ -172,24 +144,16 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
                 )}
               />
 
-              {/* Profissional responsável */}
-              <FormItem>
-                <FormLabel>Profissional Responsável</FormLabel>
-                <FormControl>
-                  <Input value={usuarioAtual} disabled />
-                </FormControl>
-              </FormItem>
-
-              {/* Categoria */}
               <FormField
                 control={form.control}
-                name="categoria"
+                name='fornecedor'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Categoria *</FormLabel>
+                    <FormLabel>Fornecedor *</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Ex: Moradia, Transporte, Impostos e Taxas..."
+                        placeholder='Nome do fornecedor ou empresa'
+                        maxLength={100}
                         {...field}
                       />
                     </FormControl>
@@ -198,17 +162,54 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
                 )}
               />
 
-              {/* Data */}
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                <FormField
+                  control={form.control}
+                  name='valor'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor *</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='0,00'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='data'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data *</FormLabel>
+                      <FormControl>
+                        <Input
+                          type='date'
+                          max={new Date().toISOString().split('T')[0]}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
               <FormField
                 control={form.control}
-                name="data"
+                name='observacoes'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data *</FormLabel>
+                    <FormLabel>Observações</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        max={new Date().toISOString().split('T')[0]}
+                      <Textarea
+                        placeholder='Informações adicionais sobre a despesa (opcional)'
+                        maxLength={500}
+                        rows={4}
                         {...field}
                       />
                     </FormControl>
@@ -218,13 +219,19 @@ const CriarDespesa: React.FC<CriarDespesaProps> = ({
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
+            <div className='flex justify-end gap-2 pt-4'>
               <DialogClose asChild>
-                <Button type="button" variant="outline">
+                <Button
+                  type='button'
+                  variant='outline'
+                >
                   Cancelar
                 </Button>
               </DialogClose>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button
+                type='submit'
+                disabled={form.formState.isSubmitting}
+              >
                 {form.formState.isSubmitting ? 'Salvando...' : 'Salvar'}
               </Button>
             </div>

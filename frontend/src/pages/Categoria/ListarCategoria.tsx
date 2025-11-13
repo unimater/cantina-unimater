@@ -10,59 +10,66 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CriarCategoria from './CriarCategoria';
-import type { Categoria } from '@/type/Categoria';
-import { toast } from 'sonner';
 import EditarCategoria from './EditarCategoria';
+import { toast } from 'sonner';
+import type { Categoria } from '@/type/Categoria';
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 const ListarCategoria: React.FC = () => {
-  const [categorias, setCategorias] = useState<Categoria[]>([
-    {
-      id: 1,
-      descricao: 'Bebidas',
-      tipo: 'PRODUTO',
-      situacao: true,
-    },
-    {
-      id: 2,
-      descricao: 'Alimentação',
-      tipo: 'PRODUTO',
-      situacao: true,
-    },
-    {
-      id: 3,
-      descricao: 'Material de Limpeza',
-      tipo: 'DESPESA',
-      situacao: false,
-    },
-  ]);
-
   const [filtro, setFiltro] = useState('');
+  const queryClient = useQueryClient();
 
-  const handleCriar = (novaCategoria: Categoria) => {
-    setCategorias(prev => [...prev, novaCategoria]);
+  const { data: categorias = [], error } = useQuery({
+    queryKey: ['getCategorias'],
+    queryFn: async () => {
+      const response = await axios.get('http://localhost:3000/categorias');
+      return response.data as Categoria[];
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`http://localhost:3000/categorias/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
+      toast.success('Categoria excluída com sucesso!');
+    },
+    onError: (error: { response: { data: { message: string } } }) => {
+      toast.error('Erro ao excluir categoria', {
+        description: error.response?.data?.message || 'Não foi possível atualizar a categoria.',
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast.error('Erro ao carregar categorias', {
+        description: error.message,
+      });
+    }
+  }, [error]);
+
+  const handleCriar = () => {
+    queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
   };
 
-  const handleAtualizar = (categoriaAtualizada: Categoria) => {
-    setCategorias(prev =>
-      prev.map(c => (c.id === categoriaAtualizada.id ? categoriaAtualizada : c))
-    );
+  const handleAtualizar = () => {
+    queryClient.invalidateQueries({ queryKey: ['getCategorias'] });
   };
 
-  const handleExcluir = (id: number) => {
-    if (
-      confirm(
-        'Ao excluir o item não será possível reverter. Deseja realmente prosseguir com a ação?'
-      )
-    ) {
-      setCategorias(prev => prev.filter(c => c.id !== id));
-      toast.success('Excluído', { description: 'A categoria foi removida com sucesso.' });
+  const handleExcluir = (id: string) => {
+    if (confirm('Tem certeza que deseja excluir esta categoria?')) {
+      deleteMutation.mutate(id);
     }
   };
 
   const categoriasFiltradas = categorias.filter(c =>
-    c.descricao.toLowerCase().includes(filtro.toLowerCase())
+    c.descricao?.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
@@ -92,7 +99,6 @@ const ListarCategoria: React.FC = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Situação</TableHead>
@@ -103,7 +109,6 @@ const ListarCategoria: React.FC = () => {
             {categoriasFiltradas.length > 0 ? (
               categoriasFiltradas.map(categoria => (
                 <TableRow key={`categoria-${categoria.id}`}>
-                  <TableCell className='font-mono text-sm'>{categoria.id}</TableCell>
                   <TableCell>{categoria.descricao}</TableCell>
                   <TableCell>
                     <span
@@ -134,7 +139,7 @@ const ListarCategoria: React.FC = () => {
                     <Button
                       variant='destructive'
                       size='sm'
-                      onClick={() => handleExcluir(categoria.id)}
+                      onClick={() => categoria.id && handleExcluir(categoria.id)}
                       className='cursor-pointer'
                     >
                       Excluir
