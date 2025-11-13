@@ -23,7 +23,7 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { z } from "zod"
 import axios from "axios"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import type { Pedido } from "@/type/Pedido"
+import type { Pedido } from "@/type/Pedidos"
 
 // ✅ Schema de validação com Zod
 const itemSchema = z.object({
@@ -43,7 +43,7 @@ const pedidoSchema = z.object({
 type FormValues = z.infer<typeof pedidoSchema>
 
 interface EditarPedidoProps {
-  pedido: Pedido
+  pedidos: Pedidos
   onPedidoAtualizado: () => void
   pedidosExistentes: Pedido[]
 }
@@ -58,11 +58,11 @@ const EditarPedido: React.FC<EditarPedidoProps> = ({
   const form = useForm<FormValues>({
     resolver: zodResolver(pedidoSchema),
     defaultValues: {
-      descricao: pedido.descricao,
-      categoria: (pedido.categoria as "PRODUTO" | "DESPESA") || "PRODUTO",
-      situacao: pedido.situacao ?? true,
+      descricao: pedidos.descricao,
+      categoria: (pedidos.categoria as "PRODUTO" | "DESPESA") || "PRODUTO",
+      situacao: pedidos.situacao ?? true,
       itens:
-        pedido.itens?.map((item) => ({
+        pedidos.itens?.map((item) => ({
           produtoId: item.produtoId,
           quantidade: Number(item.quantidade),
           precoUnitario: Number(item.precoUnitario),

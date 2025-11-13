@@ -13,7 +13,7 @@ export type PedidoItem = {
   };
 };
 
-export type Pedido = {
+export type Pedidos = {
   id: string;
   descricao: string;
   total: number | string;

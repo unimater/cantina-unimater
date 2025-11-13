@@ -58,10 +58,10 @@ export function MainLayout({ children }: MainLayoutProps) {
       current: location.pathname === '/produtos',
     }, 
     {
-      name: 'Pedido',
-      href: '/pedido',
-      icon: StickyNote,
-      current: location.pathname === '/pedido',
+      name: 'Pedidos',
+      href: '/pedidos',
+      icon: StickyNote ,
+      current: location.pathname ==='/pedido',
     },
   ];
 

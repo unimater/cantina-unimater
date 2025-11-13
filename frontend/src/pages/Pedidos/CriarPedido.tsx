@@ -32,26 +32,26 @@ const itemSchema = z.object({
   subtotal: z.number(),
 })
 
-const pedidoSchema = z.object({
+const pedidosSchema = z.object({
   descricao: z.string().min(1, "Descrição obrigatória"),
   categoria: z.enum(["PRODUTO", "DESPESA"]),
   situacao: z.boolean(),
   itens: z.array(itemSchema).min(1, "Adicione ao menos 1 item"),
 })
 
-type FormValues = z.infer<typeof pedidoSchema>
+type FormValues = z.infer<typeof pedidosSchema>
 
-interface CriarPedidoProps {
-  onPedidoCriado: () => void
+interface CriarPedidosProps {
+  onPedidosCriado: () => void
   pedidosExistentes: any[]
 }
 
-const CriarPedido: React.FC<CriarPedidoProps> = ({ onPedidoCriado }) => {
+const CriarPedido: React.FC<CriarPedidosProps> = ({ onPedidosCriado }) => {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(pedidoSchema),
+    resolver: zodResolver(pedidosSchema),
     defaultValues: {
       descricao: "",
       categoria: "PRODUTO",
@@ -91,7 +91,7 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({ onPedidoCriado }) => {
 
   const createMutation = useMutation({
     mutationFn: async (data: FormValues) => {
-      const response = await axios.post("http://localhost:3000/pedido", {
+      const response = await axios.post("http://localhost:3000/pedidos", {
         ...data,
         total,
       })
@@ -101,7 +101,7 @@ const CriarPedido: React.FC<CriarPedidoProps> = ({ onPedidoCriado }) => {
       queryClient.invalidateQueries({ queryKey: ["getPedidos"] })
       toast.success("Pedido criado com sucesso!")
       setOpen(false)
-      onPedidoCriado()
+      onPedidosCriado()
       form.reset()
     },
     onError: (error: any) => {

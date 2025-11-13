@@ -69,7 +69,7 @@ model User {
   resetToken       String?
   resetTokenExpiry DateTime?
 
-  pedidos         Pedido[]
+  pedidos          Pedido[]
 }
 
 model FormasPagamento {
@@ -100,7 +100,7 @@ model Pedido {
   formaPagamentoId   String?          @map("forma_pagamento_id")
   formaPagamento     FormasPagamento? @relation(fields: [formaPagamentoId], references: [id])
 
-  itens              PedidoItem[]     // 🟢 Relacionamento direto com os itens
+  itens              PedidoItem[]     // itens do pedido
 
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime?        @updatedAt      @map("updated_at")
