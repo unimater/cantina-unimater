@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, LogOut, Shapes, Boxes, CreditCard, DollarSignIcon } from 'lucide-react';
+import { Home, Users, LogOut, Shapes, Boxes, CreditCard, DollarSignIcon, Scroll } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { authUtils } from '@/lib/auth';
@@ -56,6 +56,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       href: '/produtos',
       icon: Boxes,
       current: location.pathname === '/produtos',
+    },
+    {
+      name: 'Pedidos',
+      href: '/pedidos',
+      icon: Scroll,
+      current: location.pathname === '/pedidos',
     },
   ];
 
@@ -124,7 +130,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Main Content */}
       <div className='flex flex-1 flex-col overflow-hidden'>
         {/* Top bar */}
-        <header className='border-b bg-white shadow-sm'>
+        <header className='border-b h-16 bg-white shadow-sm'>
           <div className='px-6 py-4'>
             <div className='flex items-center justify-between'>
               <h2 className='text-xl font-semibold text-gray-800'>

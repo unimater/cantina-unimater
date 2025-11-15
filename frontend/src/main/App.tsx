@@ -12,6 +12,7 @@ import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
+import ListarPedidos from '@/pages/PDV/ListarPedido';
 
 function App() {
   const queryClient = new QueryClient();
@@ -67,6 +68,10 @@ function App() {
           <Route
             path='produtos'
             element={<ListarProdutos />}
+          />
+          <Route
+            path='pedidos'
+            element={<ListarPedidos />}
           />
         </Route>
 
