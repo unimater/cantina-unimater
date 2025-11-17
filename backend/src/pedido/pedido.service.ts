@@ -1,162 +1,169 @@
-import { Injectable, BadRequestException } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
-import { CreatePedidoDto } from './dto/create-pedido.dto'
-import { UpdatePedidoDto } from './dto/update-pedido.dto'
-import { Decimal } from '@prisma/client/runtime/library'
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreatePedidoDto } from './dto/create-pedido.dto';
+import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import { CancelPedidoDto } from './dto/cancel-pedido.dto';
+import { FindAllPedidosDto } from './dto/find-all-pedidos.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PedidoService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  // Criar pedido + itens
   async create(dto: CreatePedidoDto) {
-    try {
-      const totalCalculado =
-        dto.itens?.reduce((acc, item) => acc + item.subtotal, 0) ?? 0
-
-      const pedido = await this.prisma.$transaction(async (tx) => {
-        const novoPedido = await tx.pedido.create({
-          data: {
-            descricao: dto.descricao,
-            total: new Decimal(totalCalculado || dto.total || 0),
-            status: 'FINALIZADO',
-            categoria: dto.categoria ?? 'PRODUTO',
-            situacao: dto.situacao ?? true,
-            createdAt: new Date(),
-            itens: {
-              create: dto.itens.map((item) => ({
-                produtoId: item.produtoId,
-                quantidade: item.quantidade,
-                precoUnitario: new Decimal(item.precoUnitario),
-                subtotal: new Decimal(item.subtotal),
-              })),
-            },
-          },
-          include: { itens: true },
-        })
-
-        return novoPedido
-      })
-
-      return pedido
-    } catch (error) {
-      console.error('❌ Erro ao criar pedido:', error)
-      throw new BadRequestException('Erro ao criar pedido.')
+    if (!dto.itens || dto.itens.length === 0) {
+      throw new BadRequestException('O pedido deve conter pelo menos um item.');
     }
+
+    const itensData = dto.itens.map((item) => {
+      const subtotal = item.precoUnitario * item.quantidade;
+      return {
+        produtoId: item.produtoId,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario,
+        subtotal,
+      };
+    });
+
+    const total = itensData.reduce((acc, item) => acc + Number(item.subtotal), 0);
+
+    return this.prisma.pedido.create({
+      data: {
+        descricao: dto.descricao ?? 'Pedido balcão',
+        total,
+        status: 'FINALIZADO',
+        dataPedido: new Date(),
+        formaPagamentoId: dto.formaPagamentoId ?? null,
+        itens: {
+          create: itensData,
+        },
+      },
+      include: {
+        formaPagamento: true,
+        itens: {
+          include: {
+            produto: true,
+          },
+        },
+      },
+    });
   }
 
-  // Atualizar pedido + itens
-  async update(id: string, dto: UpdatePedidoDto) {
-    const pedidoExistente = await this.prisma.pedido.findUnique({
-      where: { id },
-      include: { itens: true },
-    })
+  async findAll(query: FindAllPedidosDto) {
+    const { page = 1, limit = 10, status, formaPagamentoId, dataInicial, dataFinal } = query;
 
-    if (!pedidoExistente) {
-      throw new BadRequestException('Pedido não encontrado.')
-    }
+    const skip = (page - 1) * limit;
 
-    try {
-      const pedidoAtualizado = await this.prisma.$transaction(async (tx) => {
-        // Atualiza itens
-        if (dto.itens && dto.itens.length > 0) {
-          await tx.pedidoItem.deleteMany({ where: { pedidoId: id } })
+    const where: Record<string, any> = {};
 
-          await tx.pedidoItem.createMany({
-            data: dto.itens.map((item) => ({
-              pedidoId: id,
-              produtoId: item.produtoId,
-              quantidade: item.quantidade,
-              precoUnitario: new Decimal(item.precoUnitario),
-              subtotal: new Decimal(item.subtotal),
-            })),
-          })
-        }
+    if (status) where.status = status;
+    if (formaPagamentoId) where.formaPagamentoId = formaPagamentoId;
 
-        // Calcula total
-        const totalAtualizado =
-          dto.itens?.length
-            ? dto.itens.reduce((acc, item) => acc + item.subtotal, 0)
-            : Number(pedidoExistente.total)
-
-        // Atualiza pedido
-        const atualizado = await tx.pedido.update({
-          where: { id },
-          data: {
-            descricao: dto.descricao ?? pedidoExistente.descricao,
-            total: new Decimal(totalAtualizado),
-            categoria: dto.categoria ?? pedidoExistente.categoria,
-            situacao: dto.situacao ?? pedidoExistente.situacao,
-            updatedAt: new Date(),
-          },
-          include: { itens: true },
-        })
-
-        return atualizado
-      })
-
-      return pedidoAtualizado
-    } catch (error) {
-      console.error('❌ Erro ao atualizar pedido:', error)
-      throw new BadRequestException('Erro ao atualizar pedido.')
-    }
-  }
-
-  // Listar todos pedidos
-  async findAll(params: {
-    status?: string
-    dataInicio?: string
-    dataFim?: string
-    skip?: number
-    take?: number
-  }) {
-    const where: any = {}
-
-    if (params.status) where.status = params.status
-
-    if (params.dataInicio && params.dataFim) {
-      where.dataPedido = {
-        gte: new Date(params.dataInicio),
-        lte: new Date(params.dataFim),
+    if (dataInicial || dataFinal) {
+      where.dataPedido = {};
+      if (dataInicial) {
+        where.dataPedido.gte = new Date(dataInicial);
+      }
+      if (dataFinal) {
+        const fim = new Date(dataFinal);
+        fim.setHours(23, 59, 59, 999);
+        where.dataPedido.lte = fim;
       }
     }
 
-    return this.prisma.pedido.findMany({
-      where,
-      skip: params.skip,
-      take: params.take,
-      include: {
-        itens: { include: { produto: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+    const [items, total] = await Promise.all([
+      this.prisma.pedido.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { dataPedido: 'desc' },
+        include: {
+          formaPagamento: true,
+        },
+      }),
+      this.prisma.pedido.count({ where }),
+    ]);
+
+    return {
+      data: items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  // Buscar por ID
   async findOne(id: string) {
     const pedido = await this.prisma.pedido.findUnique({
       where: { id },
       include: {
-        itens: { include: { produto: true } },
+        formaPagamento: true,
+        itens: {
+          include: {
+            produto: true,
+          },
+        },
       },
-    })
+    });
 
-    if (!pedido) throw new BadRequestException('Pedido não encontrado.')
-    return pedido
+    if (!pedido) {
+      throw new NotFoundException('Pedido não encontrado.');
+    }
+
+    return pedido;
   }
 
-  // Remover pedido
-  async remove(id: string) {
+  async update(id: string, dto: UpdatePedidoDto) {
+    await this.ensureExists(id);
+
+    return this.prisma.pedido.update({
+      where: { id },
+      data: {
+        descricao: dto.descricao,
+        formaPagamentoId: dto.formaPagamentoId,
+      },
+    });
+  }
+
+  async cancel(id: string, dto: CancelPedidoDto) {
     const pedido = await this.prisma.pedido.findUnique({
       where: { id },
       include: { itens: true },
-    })
+    });
 
-    if (!pedido) throw new BadRequestException('Pedido não encontrado.')
+    if (!pedido) throw new NotFoundException('Pedido não encontrado.');
+    if (pedido.status === 'CANCELADO') throw new BadRequestException('Pedido já está cancelado.');
 
-    return this.prisma.$transaction(async (tx) => {
-      await tx.pedidoItem.deleteMany({ where: { pedidoId: id } })
-      return tx.pedido.delete({ where: { id } })
-    })
+    const hoje = new Date();
+    const mesmaData =
+      pedido.dataPedido.getDate() === hoje.getDate() &&
+      pedido.dataPedido.getMonth() === hoje.getMonth() &&
+      pedido.dataPedido.getFullYear() === hoje.getFullYear();
+
+    if (!mesmaData) {
+      throw new BadRequestException('Só é permitido cancelar pedidos do dia atual.');
+    }
+
+    return this.prisma.pedido.update({
+      where: { id },
+      data: {
+        status: 'CANCELADO',
+        motivoCancelamento: dto.motivo,
+        dataCancelamento: new Date(),
+      },
+    });
+  }
+
+  async remove(id: string) {
+    await this.ensureExists(id);
+
+    await this.prisma.pedido.delete({ where: { id } });
+
+    return true;
+  }
+
+  private async ensureExists(id: string) {
+    const pedido = await this.prisma.pedido.findUnique({ where: { id } });
+    if (!pedido) throw new NotFoundException('Pedido não encontrado.');
   }
 }

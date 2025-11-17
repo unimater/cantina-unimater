@@ -1,68 +1,50 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Patch,
   Body,
-  Param,
+  Controller,
   Delete,
-  BadRequestException,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
-} from '@nestjs/common'
-import { PedidoService } from './pedido.service'
-import { CreatePedidoDto } from './dto/create-pedido.dto'
-import { UpdatePedidoDto } from './dto/update-pedido.dto'
+} from '@nestjs/common';
+import { PedidoService } from './pedido.service';
+import { CreatePedidoDto } from './dto/create-pedido.dto';
+import { UpdatePedidoDto } from './dto/update-pedido.dto';
+import { CancelPedidoDto } from './dto/cancel-pedido.dto';
+import { FindAllPedidosDto } from './dto/find-all-pedidos.dto';
 
-@Controller('pedido')
+@Controller('pedidos')
 export class PedidoController {
   constructor(private readonly pedidoService: PedidoService) {}
 
-  // ✅ Buscar todos com filtros opcionais
-  @Get()
-  findAll(
-    @Query('status') status?: string,
-    @Query('formaPagamentoId') formaPagamentoId?: string,
-    @Query('dataInicio') dataInicio?: string,
-    @Query('dataFim') dataFim?: string,
-    @Query('skip') skip?: number,
-    @Query('take') take?: number,
-  ) {
-    // 🔹 Monta o objeto de filtros
-    const params = {
-      status,
-      formaPagamentoId,
-      dataInicio,
-      dataFim,
-      skip,
-      take,
-    }
-
-    return this.pedidoService.findAll(params)
-  }
-
-  // ✅ Buscar um pedido específico
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.pedidoService.findOne(id)
-  }
-
-  // ✅ Criar pedido
   @Post()
   create(@Body() dto: CreatePedidoDto) {
-    return this.pedidoService.create(dto)
+    return this.pedidoService.create(dto);
   }
 
-  // ✅ Atualizar pedido
+  @Get()
+  findAll(@Query() query: FindAllPedidosDto) {
+    return this.pedidoService.findAll(query);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.pedidoService.findOne(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdatePedidoDto) {
-    return this.pedidoService.update(id, dto)
+    return this.pedidoService.update(id, dto);
   }
 
-  // ✅ Remover pedido
+  @Patch(':id/cancel')
+  cancel(@Param('id') id: string, @Body() dto: CancelPedidoDto) {
+    return this.pedidoService.cancel(id, dto);
+  }
+
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const deleted = await this.pedidoService.remove(id)
-    if (!deleted) throw new BadRequestException('Erro ao excluir o pedido.')
-    return { message: 'Pedido excluído com sucesso.' }
+  remove(@Param('id') id: string) {
+    return this.pedidoService.remove(id);
   }
 }
