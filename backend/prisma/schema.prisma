@@ -66,18 +66,15 @@ model User {
   email        String?      @db.VarChar(200)
   phone        String?      @db.VarChar(20)
   active       Boolean      @default(true)
-  resetToken       String?     
-  resetTokenExpiry DateTime?   
-  venda Venda[]
 
   movimentacaoEstoque MovimentacaoEstoque[]
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
 
-
   resetToken       String?     
   resetTokenExpiry DateTime?   
+  venda Venda[]
 }
 
 model formasPagamento {

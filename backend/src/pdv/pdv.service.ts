@@ -1,17 +1,17 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma-service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { ConcluirVendaPdvDTO } from './dto/concluir-venda-pdv.dto';
 import { ProdutoVendaDTO } from './dto/produto-venda.dto';
+import { MovimentacaoEstoqueService } from 'src/movimentacao-estoque/movimentacao-estoque.service';
 
 @Injectable()
 export class PdvService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(private prismaService: PrismaService, private movimentacaoEstoqueService: MovimentacaoEstoqueService) {}
 
   async concluirVendaPdv(concluirVendaPdvDto: ConcluirVendaPdvDTO) {
     const { produtos, usuarioId } = concluirVendaPdvDto;
 
     this.validarVenda(concluirVendaPdvDto);
-    this.baixarEstoque(produtos, usuarioId);
 
     const valorLiquidoVenda =
       concluirVendaPdvDto.valorTotalVenda - concluirVendaPdvDto.valorTotalDesconto;
@@ -39,6 +39,8 @@ export class PdvService {
       },
     });
 
+    await this.baixarEstoque(produtos, usuarioId);
+
     return {
       message: 'Sucesso! A venda foi concluída com sucesso.',
       venda,
@@ -50,12 +52,16 @@ export class PdvService {
     if (!concluirVendaPdvDto.formaPagamentoId) throw new HttpException('Nenhuma forma de pagamento foi informada.', 400);
   }
   
-  private baixarEstoque(produtosVenda: ProdutoVendaDTO[], usuarioId: string) {
-    produtosVenda.forEach(produto => {
-      // const baixarPdv = new BaixarPdv(produto.produtoId, produto.quantidade, usuarioId)
-      // this.prismaService.movimentacaoEstoque.baixarEstoque(baixarPdv)
-      console.log("baixando estoque do produto: ", produto)
-    })
+  private async baixarEstoque(produtosVenda: ProdutoVendaDTO[], usuarioId: string) {
+    for (const produto of produtosVenda) {
+      const baixarPdv = { 
+        produtoId: produto.produtoId, 
+        quantidade: produto.quantidade, 
+        usuarioId 
+      };
+
+      await this.movimentacaoEstoqueService.baixarEstoque(baixarPdv);
+    }
   }
   
 }
