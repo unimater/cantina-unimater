@@ -29,8 +29,10 @@ export class VendaService {
       },
     });
 
+    const top5 = produtos.slice(0, 5);
+
     const result = await Promise.all(
-      produtos.map(async (p) => {
+      top5.map(async (p) => {
         const produtoInfo = await this.prismaService.produto.findUnique({
           where: { id: p.produtoId },
         });
