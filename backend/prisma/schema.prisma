@@ -21,6 +21,9 @@ model Produto {
     categoriaId String    @map("categoria_id")
 
     movimentacaoEstoque MovimentacaoEstoque[]
+
+    createdBy   String    @map("created_by")
+    user        User      @relation(fields: [createdBy], references: [id])
     
     createdAt   DateTime  @default(now()) @map("created_at")
     updatedAt   DateTime? @updatedAt @map("updated_at")
@@ -35,6 +38,9 @@ model Categoria {
     situacao  Boolean
 
     produtos  Produto[]
+
+    createdBy String    @map("created_by")
+    user      User      @relation(fields: [createdBy], references: [id])
 
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime? @updatedAt @map("updated_at")
@@ -51,7 +57,10 @@ model Despesa {
   data           DateTime                                    
   valor          Decimal               
   fornecedor     String?                   
-  observacoes    String?       
+  observacoes    String?
+
+  createdBy      String     @map("created_by")
+  user           User       @relation(fields: [createdBy], references: [id])  
 
   createdAt DateTime  @default(now()) @map("created_at")       
   updatedAt DateTime? @updatedAt      @map("updated_at")                                  
@@ -69,18 +78,27 @@ model User {
 
   movimentacaoEstoque MovimentacaoEstoque[]
 
+  created_by   String
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
 
   resetToken       String?     
   resetTokenExpiry DateTime?   
   venda Venda[]
+
+  produtos         Produto[]
+  categorias       Categoria[]
+  despesas         Despesa[]
+  formasPagamento  formasPagamento[]
 }
 
 model formasPagamento {
   id           String       @id @default(cuid())
   name         String
   status       Boolean      @default(true)
+
+  createdBy    String       @map("created_by")
+  user         User         @relation(fields: [createdBy], references: [id])
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt

@@ -6,6 +6,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Module({
   controllers: [MovimentacaoEstoqueController],
   providers: [MovimentacaoEstoqueService, PrismaService],
-  exports: [MovimentacaoEstoqueService]
+  exports: [MovimentacaoEstoqueService],
 })
 export class MovimentacaoEstoqueModule {}

@@ -32,7 +32,8 @@ import { VendaModule } from './vendas/venda.module';
     EmailModule,
     MovimentacaoEstoqueModule,
     PdvModule,
-    VendaModule
+    VendaModule,
+    MovimentacaoEstoqueModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, PrismaService],
