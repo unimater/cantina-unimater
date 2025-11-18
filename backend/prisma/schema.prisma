@@ -27,6 +27,8 @@ model Produto {
     
     createdAt   DateTime  @default(now()) @map("created_at")
     updatedAt   DateTime? @updatedAt @map("updated_at")
+
+    vendaProduto VendaProduto[]
 }
 
 model Categoria {
@@ -80,9 +82,9 @@ model User {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
 
-
   resetToken       String?     
-  resetTokenExpiry DateTime?
+  resetTokenExpiry DateTime?   
+  venda Venda[]
 
   produtos         Produto[]
   categorias       Categoria[]
@@ -100,6 +102,41 @@ model formasPagamento {
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
+
+  venda Venda[]
+}
+
+model Venda {
+  id                 String            @id @default(cuid())
+  valorTotalVenda    Decimal           @map("valor_total_venda")
+  valorTotalDesconto Decimal           @map("valor_total_desconto")
+  valorLiquido       Decimal           @map("valor_liquido")
+
+  formaPagamento     formasPagamento   @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamentoId   String
+
+  usuario            User              @relation(fields: [usuarioId], references: [id])
+  usuarioId          String
+
+  produtos           VendaProduto[]
+
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime?         @updatedAt      @map("updated_at")
+}
+
+model VendaProduto {
+  id             String   @id @default(cuid())
+
+  produto        Produto  @relation(fields: [produtoId], references: [id])
+  produtoId      String
+
+  venda          Venda    @relation(fields: [vendaId], references: [id])
+  vendaId        String
+
+  quantidade     Int
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt     @map("updated_at")
 }
 
 enum TipoMovimentacao {

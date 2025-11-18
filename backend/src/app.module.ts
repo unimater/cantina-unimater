@@ -13,6 +13,8 @@ import { UsersModule } from './users/users.module';
 import { AuthController } from './auth/auth.controller';
 import { EmailModule } from './emails/email.module';
 import { MovimentacaoEstoqueModule } from './movimentacao-estoque/movimentacao-estoque.module';
+import { PdvModule } from './pdv/pdv.module';
+import { VendaModule } from './vendas/venda.module';
 
 @Module({
   imports: [
@@ -28,7 +30,10 @@ import { MovimentacaoEstoqueModule } from './movimentacao-estoque/movimentacao-e
     CategoriasModule,
     ProdutosModule,
     EmailModule,
-    MovimentacaoEstoqueModule
+    MovimentacaoEstoqueModule,
+    PdvModule,
+    VendaModule,
+    MovimentacaoEstoqueModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, PrismaService],

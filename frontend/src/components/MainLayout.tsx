@@ -37,6 +37,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       name: 'Despesas',
       href: '/despesas',
       icon: DollarSignIcon,
+      icon: DollarSignIcon,
       current: location.pathname === '/despesas',
     },
     {
