@@ -8,8 +8,8 @@ import { MovimentacaoEstoqueService } from 'src/movimentacao-estoque/movimentaca
 export class PdvService {
   constructor(private prismaService: PrismaService, private movimentacaoEstoqueService: MovimentacaoEstoqueService) {}
 
-  async concluirVendaPdv(concluirVendaPdvDto: ConcluirVendaPdvDTO) {
-    const { produtos, usuarioId } = concluirVendaPdvDto;
+  async concluirVendaPdv(concluirVendaPdvDto: ConcluirVendaPdvDTO, usuarioId: string) {
+    const { produtos } = concluirVendaPdvDto;
 
     this.validarVenda(concluirVendaPdvDto);
 
@@ -22,7 +22,7 @@ export class PdvService {
         valorTotalDesconto: concluirVendaPdvDto.valorTotalDesconto,
         valorLiquido: valorLiquidoVenda,
         formaPagamentoId: concluirVendaPdvDto.formaPagamentoId,
-        usuarioId: concluirVendaPdvDto.usuarioId,
+        usuarioId: usuarioId,
         createdAt: new Date().toISOString(),
 
         produtos: {

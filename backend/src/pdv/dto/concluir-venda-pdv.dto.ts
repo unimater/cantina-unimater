@@ -5,5 +5,4 @@ export class ConcluirVendaPdvDTO {
     valorTotalVenda: number
     valorTotalDesconto: number
     formaPagamentoId: string
-    usuarioId: string
 }
