@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ResumoFinanceiroDto } from './dto/resumo-financeiro.dto';
+import { ProdutoMaisVendidoDto } from './dto/produto-mais-vendido.dto';
+import { VendaFormaPagamentoDto } from './dto/venda-forma-pagamento.dto';
+import { ItemEstoqueDto } from './dto/item-estoque.dto';
 
 @Injectable()
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
-  async getResumoFinanceiro(periodo: 'hoje' | 'semana' | 'mes' = 'hoje') {
+  async getResumoFinanceiro(periodo: 'hoje' | 'semana' | 'mes' = 'hoje'): Promise<ResumoFinanceiroDto> {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -59,7 +63,7 @@ export class DashboardService {
     };
   }
 
-  async getProdutosMaisVendidos(limite: number = 10) {
+  async getProdutosMaisVendidos(limite: number = 10): Promise<ProdutoMaisVendidoDto[]> {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -98,7 +102,7 @@ export class DashboardService {
     return produtosComNome;
   }
 
-  async getVendasPorFormaPagamento() {
+  async getVendasPorFormaPagamento(): Promise<VendaFormaPagamentoDto[]> {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
@@ -137,7 +141,7 @@ export class DashboardService {
     }));
   }
 
-  async getControleEstoque() {
+  async getControleEstoque(): Promise<ItemEstoqueDto[]> {
     const estoques = await this.prisma.estoque.findMany({
       include: {
         produto: {
