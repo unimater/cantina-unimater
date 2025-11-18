@@ -7,7 +7,7 @@ import { PrismaService } from 'src/prisma/prisma-service';
 export class FormasPagamentoService {
   constructor(private prismaService: PrismaService) {}
 
-   async create(createFormasPagamentoDto: CreateFormasPagamentoDto) {
+   async create(createFormasPagamentoDto: CreateFormasPagamentoDto, user: string) {
     const { name, status } = createFormasPagamentoDto;
 
     if (!name) {
@@ -15,7 +15,11 @@ export class FormasPagamentoService {
     }
 
     return this.prismaService.formasPagamento.create({
-      data: { name, status },
+      data: { 
+        name, 
+        status, 
+        createdBy: user 
+      }
     });
   }
 

@@ -75,6 +75,8 @@ export class AuthController {
 
     return {
       access_token: accessToken,
+      id: user.id,
+      nome: user.name
     };
   }
 

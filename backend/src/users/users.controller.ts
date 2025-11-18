@@ -22,9 +22,7 @@ export class UsersController {
 
   @Post()
   create(@Body() userDto: UserDto, @CurrentUser() user: UserAuthPayload) {
-    console.log('user', user.sub);
-
-    return this.usersService.create(userDto);
+    return this.usersService.create(userDto, user.sub);
   }
 
   @Get()
