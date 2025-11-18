@@ -1,16 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { DespesasService } from './despesas.service';
 import { CreateDespesaDto } from './dto/create-despesa.dto';
 import { UpdateDespesaDto } from './dto/update-despesa.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CurrentUser } from 'src/auth/current-user-decorator';
+import type { UserAuthPayload } from 'src/auth/jwt.strategy';
 
 @Controller('despesas')
+@UseGuards(JwtAuthGuard)
 export class DespesasController {
   constructor(private readonly despesasService: DespesasService) {}
 
   // Criar despesa
   @Post()
-  create(@Body() createDespesaDto: CreateDespesaDto) {
-    return this.despesasService.create(createDespesaDto);
+  create(@Body() createDespesaDto: CreateDespesaDto, @CurrentUser() user: UserAuthPayload) {
+    return this.despesasService.create(createDespesaDto, user.sub);
   }
 
   // Listar todas as despesas

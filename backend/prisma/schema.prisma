@@ -9,20 +9,27 @@ datasource db {
 }
 
 model Produto {
-    id          String       @id @default(cuid())
-    descricao   String
-    valor       Decimal
-    situacao    Boolean
-    imagem      String?
+    id                      String    @id @default(cuid())
+    descricao               String
+    valor                   Decimal
+    situacao                Boolean
+    imagem                  String?
+    quantidadeEstoque       Decimal @default(0)
+    estoqueMinimo           Decimal @default(0)
 
-    categoria   Categoria    @relation(fields: [categoriaId], references: [id])  
-    categoriaId String       @map("categoria_id") 
-    
+    categoria   Categoria @relation(fields: [categoriaId], references: [id])
+    categoriaId String    @map("categoria_id")
+
+    movimentacaoEstoque MovimentacaoEstoque[]
+    vendaProduto VendaProduto[]
     itensVenda  ItemVenda[]
     estoque     Estoque?
-    
-    createdAt   DateTime     @default(now()) @map("created_at")
-    updatedAt   DateTime?    @updatedAt @map("updated_at")
+
+    createdBy   String    @map("created_by")
+    user        User      @relation(fields: [createdBy], references: [id])
+
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @updatedAt @map("updated_at")
 }
 
 model Categoria {
@@ -32,6 +39,9 @@ model Categoria {
     situacao  Boolean
 
     produtos  Produto[]
+
+    createdBy String    @map("created_by")
+    user      User      @relation(fields: [createdBy], references: [id])
 
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime? @updatedAt @map("updated_at")
@@ -44,21 +54,24 @@ enum TipoCategoria {
 
 model Despesa {
   id             String     @id @default(cuid())
-  descricao      String     @unique                                                     
-  data           DateTime                                    
-  valor          Decimal               
-  fornecedor     String?                   
-  observacoes    String?       
+  descricao      String     @unique
+  data           DateTime
+  valor          Decimal
+  fornecedor     String?
+  observacoes    String?
 
-  createdAt DateTime  @default(now()) @map("created_at")       
-  updatedAt DateTime? @updatedAt      @map("updated_at")                                  
+  createdBy      String     @map("created_by")
+  user           User       @relation(fields: [createdBy], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt      @map("updated_at")
 }
 
 model User {
   id           String       @id @default(cuid())
   cpf          String       @unique @db.VarChar(20)
   name         String       @db.VarChar(200)
-  username     String       @unique @db.VarChar(100) 
+  username     String       @unique @db.VarChar(100)
   password     String       @db.VarChar(200)
   email        String?      @db.VarChar(200)
   phone        String?      @db.VarChar(20)
@@ -67,8 +80,15 @@ model User {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
 
-  resetToken       String?     
-  resetTokenExpiry DateTime?   
+  resetToken       String?
+  resetTokenExpiry DateTime?
+
+  venda Venda[]
+  produtos         Produto[]
+  categorias       Categoria[]
+  despesas         Despesa[]
+  formasPagamento  formasPagamento[]
+  movimentacaoEstoque MovimentacaoEstoque[]
 }
 
 model formasPagamento {
@@ -76,25 +96,50 @@ model formasPagamento {
   name         String
   status       Boolean      @default(true)
 
-  vendas       Venda[]
+  createdBy    String       @map("created_by")
+  user         User         @relation(fields: [createdBy], references: [id])
 
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
+
+  venda Venda[]
 }
 
 model Venda {
-  id                String           @id @default(cuid())
+  id                 String            @id @default(cuid())
   data              DateTime         @default(now())
+  valorTotalVenda    Decimal           @map("valor_total_venda")
+  valorTotalDesconto Decimal           @map("valor_total_desconto")
+  valorLiquido       Decimal           @map("valor_liquido")
   valorTotal        Decimal
   observacoes       String?
 
-  formaPagamento    formasPagamento  @relation(fields: [formaPagamentoId], references: [id])
-  formaPagamentoId  String           @map("forma_pagamento_id")
+  formaPagamento     formasPagamento   @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamentoId   String            @map("forma_pagamento_id")
 
+  usuario            User              @relation(fields: [usuarioId], references: [id])
+  usuarioId          String
+
+  produtos           VendaProduto[]
   itens             ItemVenda[]
 
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime?        @updatedAt @map("updated_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime?         @updatedAt      @map("updated_at")
+}
+
+model VendaProduto {
+  id             String   @id @default(cuid())
+
+  produto        Produto  @relation(fields: [produtoId], references: [id])
+  produtoId      String
+
+  venda          Venda    @relation(fields: [vendaId], references: [id])
+  vendaId        String
+
+  quantidade     Int
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt     @map("updated_at")
 }
 
 model ItemVenda {
@@ -111,6 +156,31 @@ model ItemVenda {
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime? @updatedAt @map("updated_at")
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+model MovimentacaoEstoque {
+  id                String @id @default(cuid())
+
+  produto           Produto @relation(fields: [produtoId], references: [id])
+  produtoId         String @map("produtoId")
+
+  usuario           User @relation(fields: [usuarioId], references: [id])
+  usuarioId         String @map("usuarioId")
+
+  tipo              TipoMovimentacao
+  motivo            String @db.VarChar(255)
+  quantidade        Decimal @db.Decimal(15, 2)
+  estoqueAnterior   Decimal @db.Decimal(15, 2)
+  estoqueAtual      Decimal @db.Decimal(15, 2)
+  observacoes       String? @db.VarChar(255)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @updatedAt
 }
 
 model Estoque {
