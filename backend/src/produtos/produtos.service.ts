@@ -7,7 +7,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class ProdutosService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async create(dto: CreateProdutoDto) {
+    async create(dto: CreateProdutoDto, user: string) {
         const { descricao, valor, situacao, imagem, categoriaId } = dto;
 
         if (!descricao || valor === undefined || !categoriaId) {
@@ -33,6 +33,7 @@ export class ProdutosService {
             valor,
             situacao: situacao ?? true,
             categoriaId,
+            createdBy: user
         };
 
         if (imagem) {
