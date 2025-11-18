@@ -6,8 +6,7 @@ import {
   LogOut,
   Shapes,
   Boxes,
-  CreditCard,
-  DollarSignIcon,
+  CreditCard, DollarSignIcon, PackageSearch,
   Scroll,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -46,6 +45,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       name: 'Despesas',
       href: '/despesas',
       icon: DollarSignIcon,
+      icon: DollarSignIcon,
       current: location.pathname === '/despesas',
     },
     {
@@ -65,6 +65,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       href: '/produtos',
       icon: Boxes,
       current: location.pathname === '/produtos',
+    },
+    {
+      "name": "Estoque",
+      "href": "/estoque",
+      "icon": PackageSearch,
+      "current": location.pathname === '/estoque'
     },
     {
       name: 'PDV',

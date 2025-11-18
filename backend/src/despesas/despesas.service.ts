@@ -25,7 +25,7 @@ export class DespesasService {
     return despesa;
   }
 
-  async create(createDespesaDto: CreateDespesaDto) {
+  async create(createDespesaDto: CreateDespesaDto, user: string) {
     const dataDespesa = new Date(createDespesaDto.data);
 
     if (dataDespesa > new Date()) {
@@ -40,6 +40,7 @@ export class DespesasService {
           valor: createDespesaDto.valor,
           fornecedor: createDespesaDto.fornecedor,
           observacoes: createDespesaDto.observacoes,
+          createdBy: user
         },
       });
 

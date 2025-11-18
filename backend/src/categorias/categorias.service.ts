@@ -12,7 +12,7 @@ export class CategoriasService {
     constructor(private readonly prisma: PrismaService) { }
 
     // Criar categoria
-    async create(createCategoriaDto: CreateCategoriaDto) {
+    async create(createCategoriaDto: CreateCategoriaDto, user: string) {
         const { descricao, tipo, situacao } = createCategoriaDto;
 
         if (!descricao || !tipo) {
@@ -40,6 +40,7 @@ export class CategoriasService {
                 descricao,
                 tipo,
                 situacao: situacao ?? true,
+                createdBy: user
             },
         });
 

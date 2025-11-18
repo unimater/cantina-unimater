@@ -1,16 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, HttpCode, UseGuards } from '@nestjs/common';
 import { FormasPagamentoService } from './formas-pagamento.service';
 import { CreateFormasPagamentoDto } from './dto/create-formas-pagamento.dto';
 import { UpdateFormasPagamentoDto } from './dto/update-formas-pagamento.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CurrentUser } from 'src/auth/current-user-decorator';
+import type { UserAuthPayload } from 'src/auth/jwt.strategy';
 
 @Controller('formas-pagamento')
+@UseGuards(JwtAuthGuard)
 export class FormasPagamentoController {
   constructor(private readonly formasPagamentoService: FormasPagamentoService) {}
 
   @Post()
   @HttpCode(201)
-  create(@Body() createFormasPagamentoDto: CreateFormasPagamentoDto) {
-    return this.formasPagamentoService.create(createFormasPagamentoDto);
+  create(@Body() createFormasPagamentoDto: CreateFormasPagamentoDto, @CurrentUser() user: UserAuthPayload) {
+    return this.formasPagamentoService.create(createFormasPagamentoDto, user.sub);
   }
 
   @Get()

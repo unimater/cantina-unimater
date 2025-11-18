@@ -76,6 +76,8 @@ export class AuthController {
 
     return {
       access_token: accessToken,
+      id: user.id,
+      nome: user.name
     };
   }
 
@@ -146,7 +148,11 @@ export class AuthController {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null },
+      data: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
     });
 
     return { message: 'Senha redefinida com sucesso.' };
