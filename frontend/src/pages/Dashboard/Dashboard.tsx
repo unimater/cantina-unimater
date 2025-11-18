@@ -1,211 +1,243 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, ShoppingCart, DollarSign, Package, AlertTriangle, Coffee } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { authUtils } from '@/lib/auth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from 'recharts';
+import { useEffect, useState } from 'react';
+import { dashboardApi } from '@/api/dashboard';
+import type {
+    ResumoFinanceiro,
+    ProdutoMaisVendido,
+    VendaPorFormaPagamento,
+    ItemEstoque,
+} from '@/api/dashboard';
+
+const COLORS = ['#FCD34D', '#A78BFA', '#EC4899'];
 
 export function Dashboard() {
-  const user = authUtils.getUser();
+    const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
+    const [produtosMaisVendidos, setProdutosMaisVendidos] = useState<ProdutoMaisVendido[]>([]);
+    const [vendasPorFormaPagamento, setVendasPorFormaPagamento] = useState<
+        VendaPorFormaPagamento[]
+    >([]);
+    const [estoque, setEstoque] = useState<ItemEstoque[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  const stats = [
-    {
-      title: 'Vendas Hoje',
-      value: 'R$ 847,50',
-      description: '+18% em relação a ontem',
-      icon: DollarSign,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-    },
-    {
-      title: 'Pedidos do Dia',
-      value: '124',
-      description: '23 pedidos na última hora',
-      icon: ShoppingCart,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-    },
-    {
-      title: 'Produtos em Falta',
-      value: '3',
-      description: 'Pão de açúcar, Refrigerante, Salgado',
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-    },
-    {
-      title: 'Funcionários Online',
-      value: '8',
-      description: '2 caixas, 4 cozinha, 2 limpeza',
-      icon: Users,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      href: '/usuarios',
-    },
-  ];
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const [resumoData, produtosData, vendasData, estoqueData] = await Promise.all([
+                    dashboardApi.getResumoFinanceiro('hoje'),
+                    dashboardApi.getProdutosMaisVendidos(5),
+                    dashboardApi.getVendasPorFormaPagamento(),
+                    dashboardApi.getControleEstoque(),
+                ]);
 
-  return (
-    <div className='space-y-6'>
-      <div>
-        <h1 className='text-3xl font-bold text-gray-900'>Bem-vindo, {user?.nome || 'Usuário'}!</h1>
-        <p className='mt-2 text-gray-600'>
-          Aqui está um resumo do que está acontecendo na cantina hoje.
-        </p>
-      </div>
+                setResumo(resumoData);
+                setProdutosMaisVendidos(produtosData);
+                setVendasPorFormaPagamento(vendasData);
+                setEstoque(estoqueData);
+            } catch (error) {
+                console.error('Erro ao carregar dados do dashboard:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
-        {stats.map(stat => {
-          const Icon = stat.icon;
-          const CardComponent = stat.href
-            ? ({ children, ...props }: React.ComponentProps<typeof Card>) => (
-                <Link to={stat.href}>
-                  <Card
-                    {...props}
-                    className='cursor-pointer transition-shadow hover:shadow-md'
-                  >
-                    {children}
-                  </Card>
-                </Link>
-              )
-            : Card;
+        fetchData();
+    }, []);
 
-          return (
-            <CardComponent key={stat.title}>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-                <CardTitle className='text-sm font-medium'>{stat.title}</CardTitle>
-                <div className={`rounded-lg p-2 ${stat.bgColor || 'bg-gray-50'}`}>
-                  <Icon className={`h-4 w-4 ${stat.color || 'text-gray-600'}`} />
-                </div>
+    if (loading) {
+        return (
+            <div className='flex h-screen items-center justify-center'>
+                <p>Carregando...</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className='space-y-6 p-6'>
+            <div>
+                <h1 className='text-3xl font-bold text-gray-900'>Catina Unimater</h1>
+                <p className='mt-2 text-gray-600'>
+                    Aqui está um resumo do que está acontecendo na cantina hoje.
+                </p>
+            </div>
+
+            <div className='grid gap-6 md:grid-cols-3'>
+                <Card>
+                    <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                        <CardTitle className='text-sm font-medium'>Total de Receitas</CardTitle>
+                        <div className='rounded-lg bg-green-50 p-2'>
+                            <TrendingUp className='h-4 w-4 text-green-600' />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className='text-2xl font-bold'>
+                            ${resumo?.totalReceitas.toFixed(2) || '0.00'}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                        <CardTitle className='text-sm font-medium'>Total de Despesas</CardTitle>
+                        <div className='rounded-lg bg-red-50 p-2'>
+                            <TrendingDown className='h-4 w-4 text-red-600' />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className='text-2xl font-bold'>
+                            ${resumo?.totalDespesas.toFixed(2) || '0.00'}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                        <CardTitle className='text-sm font-medium'>Saldo</CardTitle>
+                        <div className='rounded-lg bg-blue-50 p-2'>
+                            <Wallet className='h-4 w-4 text-blue-600' />
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className='text-2xl font-bold'>${resumo?.saldo.toFixed(2) || '0.00'}</div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className='grid gap-6 md:grid-cols-2'>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Produtos mais vendidos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width='100%' height={300}>
+                      <BarChart data={produtosMaisVendidos}>
+                        <XAxis dataKey='produto' tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip />
+                        <Bar dataKey='quantidade' fill='#60A5FA' radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Formas de pagamento</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className='mb-4 flex items-center justify-center gap-6'>
+                      {vendasPorFormaPagamento.map((item, index) => (
+                        <div key={item.formaPagamento} className='flex items-center gap-2'>
+                          <div
+                            className='h-3 w-3 rounded-full'
+                            style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                          />
+                          <span className='text-sm text-gray-600'>{item.formaPagamento}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <ResponsiveContainer width='100%' height={260}>
+                      <PieChart>
+                        <Pie
+                          data={vendasPorFormaPagamento as any}
+                          cx='50%'
+                          cy='50%'
+                          innerRadius={70}
+                          outerRadius={100}
+                          fill='#8884d8'
+                          paddingAngle={2}
+                          dataKey='percentual'
+                          nameKey='formaPagamento'
+                        >
+                          {vendasPorFormaPagamento.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Estoque</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className='text-2xl font-bold'>{stat.value}</div>
-                <p className='text-muted-foreground text-xs'>{stat.description}</p>
+                <div className='overflow-x-auto'>
+                  <table className='w-full border-collapse'>
+                    <thead>
+                      <tr className='border-b'>
+                        <th className='py-3 text-left font-semibold'>Produto</th>
+                        <th className='py-3 text-center font-semibold'>Quantidade</th>
+                        <th className='py-3 text-center font-semibold'>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {estoque.slice(0, 5).map((item) => (
+                        <tr key={item.id} className='border-b'>
+                          <td className='py-3'>{item.produto}</td>
+                          <td className='py-3 text-center'>{item.quantidade}</td>
+                          <td className='py-3 px-2'>
+                            <div
+                              className={`rounded-md py-2 text-center text-sm font-medium text-white ${
+                                item.status === 'Esgotado'
+                                  ? 'bg-red-500'
+                                  : item.status === 'Baixo estoque'
+                                    ? 'bg-orange-500'
+                                    : 'bg-green-600'
+                              }`}
+                            >
+                              {item.status}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className='mt-4 flex items-center justify-between'>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-sm text-gray-600'>Rows per page</span>
+                      <select className='rounded border px-2 py-1 text-sm'>
+                        <option>5</option>
+                        <option>10</option>
+                        <option>20</option>
+                      </select>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <span className='text-sm text-gray-600'>Page 1 of 2</span>
+                      <div className='flex gap-1'>
+                        <button className='rounded border px-2 py-1 text-sm hover:bg-gray-100'>
+                          «
+                        </button>
+                        <button className='rounded border px-2 py-1 text-sm hover:bg-gray-100'>
+                          ‹
+                        </button>
+                        <button className='rounded border px-2 py-1 text-sm hover:bg-gray-100'>
+                          ›
+                        </button>
+                        <button className='rounded border px-2 py-1 text-sm hover:bg-gray-100'>
+                          »
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
-            </CardComponent>
-          );
-        })}
-      </div>
-
-      <div className='grid gap-6 md:grid-cols-3'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Produtos Mais Vendidos</CardTitle>
-            <CardDescription>Top 5 produtos do dia</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-3'>
-              <div className='flex items-center justify-between'>
-                <span className='text-sm font-medium'>Salgado de Frango</span>
-                <span className='text-sm text-gray-500'>47 unidades</span>
-              </div>
-              <div className='flex items-center justify-between'>
-                <span className='text-sm font-medium'>Refrigerante</span>
-                <span className='text-sm text-gray-500'>38 unidades</span>
-              </div>
-              <div className='flex items-center justify-between'>
-                <span className='text-sm font-medium'>Café Expresso</span>
-                <span className='text-sm text-gray-500'>32 unidades</span>
-              </div>
-              <div className='flex items-center justify-between'>
-                <span className='text-sm font-medium'>Pão de Açúcar</span>
-                <span className='text-sm text-gray-500'>28 unidades</span>
-              </div>
-              <div className='flex items-center justify-between'>
-                <span className='text-sm font-medium'>Suco Natural</span>
-                <span className='text-sm text-gray-500'>21 unidades</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Ações Rápidas</CardTitle>
-            <CardDescription>Acesse as funcionalidades mais utilizadas</CardDescription>
-          </CardHeader>
-          <CardContent className='space-y-3'>
-            <Link
-              to='/usuarios'
-              className='flex items-center rounded-lg bg-blue-50 p-3 transition-colors hover:bg-blue-100'
-            >
-              <Users className='mr-3 h-5 w-5 text-blue-600' />
-              <div>
-                <div className='font-medium text-blue-900'>Gerenciar Funcionários</div>
-                <div className='text-sm text-blue-600'>
-                  Adicionar, editar funcionários da cantina
-                </div>
-              </div>
-            </Link>
-
-            <Link
-              to='/produtos'
-              className='flex items-center rounded-lg bg-green-50 p-3 transition-colors hover:bg-green-100'
-            >
-              <Coffee className='mr-3 h-5 w-5 text-green-600' />
-              <div>
-                <div className='font-medium text-green-900'>Cardápio</div>
-                <div className='text-sm text-green-600'>Gerenciar produtos e preços</div>
-              </div>
-            </Link>
-
-            <div className='flex items-center rounded-lg bg-orange-50 p-3'>
-              <Package className='mr-3 h-5 w-5 text-orange-600' />
-              <div>
-                <div className='font-medium text-orange-900'>Estoque</div>
-                <div className='text-sm text-orange-600'>Controlar produtos em estoque</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>Últimas movimentações da cantina</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-4'>
-              <div className='flex items-start'>
-                <div className='mt-1 mr-3 h-2 w-2 rounded-full bg-green-500'></div>
-                <div className='text-sm'>
-                  <span className='font-medium'>Venda: 15x Salgado de Frango</span>
-                  <div className='text-gray-500'>R$ 45,00 • há 12 minutos</div>
-                </div>
-              </div>
-
-              <div className='flex items-start'>
-                <div className='mt-1 mr-3 h-2 w-2 rounded-full bg-blue-500'></div>
-                <div className='text-sm'>
-                  <span className='font-medium'>Funcionário: Maria Silva fez login</span>
-                  <div className='text-gray-500'>Caixa 2 • há 1 hora</div>
-                </div>
-              </div>
-
-              <div className='flex items-start'>
-                <div className='mt-1 mr-3 h-2 w-2 rounded-full bg-red-500'></div>
-                <div className='text-sm'>
-                  <span className='font-medium'>Alerta: Refrigerante Coca-Cola em falta</span>
-                  <div className='text-gray-500'>Estoque zerado • há 2 horas</div>
-                </div>
-              </div>
-
-              <div className='flex items-start'>
-                <div className='mt-1 mr-3 h-2 w-2 rounded-full bg-orange-500'></div>
-                <div className='text-sm'>
-                  <span className='font-medium'>Reposição: 50 unidades de Pão de Açúcar</span>
-                  <div className='text-gray-500'>Fornecedor ABC • há 3 horas</div>
-                </div>
-              </div>
-
-              <div className='flex items-start'>
-                <div className='mt-1 mr-3 h-2 w-2 rounded-full bg-purple-500'></div>
-                <div className='text-sm'>
-                  <span className='font-medium'>Cardápio: Novo item adicionado</span>
-                  <div className='text-gray-500'>Suco Natural de Laranja • ontem</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+            </Card>
+        </div>
+    );
 }

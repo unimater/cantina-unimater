@@ -9,17 +9,20 @@ datasource db {
 }
 
 model Produto {
-    id          String    @id @default(cuid())
+    id          String       @id @default(cuid())
     descricao   String
     valor       Decimal
     situacao    Boolean
     imagem      String?
 
-    categoria   Categoria @relation(fields: [categoriaId], references: [id])  
-    categoriaId String    @map("categoria_id") 
+    categoria   Categoria    @relation(fields: [categoriaId], references: [id])  
+    categoriaId String       @map("categoria_id") 
     
-    createdAt   DateTime  @default(now()) @map("created_at")
-    updatedAt   DateTime? @updatedAt @map("updated_at")
+    itensVenda  ItemVenda[]
+    estoque     Estoque?
+    
+    createdAt   DateTime     @default(now()) @map("created_at")
+    updatedAt   DateTime?    @updatedAt @map("updated_at")
 }
 
 model Categoria {
@@ -73,6 +76,51 @@ model formasPagamento {
   name         String
   status       Boolean      @default(true)
 
+  vendas       Venda[]
+
   createdAt    DateTime     @default(now())
   updatedAt    DateTime?    @updatedAt
+}
+
+model Venda {
+  id                String           @id @default(cuid())
+  data              DateTime         @default(now())
+  valorTotal        Decimal
+  observacoes       String?
+
+  formaPagamento    formasPagamento  @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamentoId  String           @map("forma_pagamento_id")
+
+  itens             ItemVenda[]
+
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime?        @updatedAt @map("updated_at")
+}
+
+model ItemVenda {
+  id            String    @id @default(cuid())
+  quantidade    Int
+  valorUnitario Decimal
+  valorTotal    Decimal
+
+  venda         Venda     @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  vendaId       String    @map("venda_id")
+
+  produto       Produto   @relation(fields: [produtoId], references: [id])
+  produtoId     String    @map("produto_id")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime? @updatedAt @map("updated_at")
+}
+
+model Estoque {
+  id              String    @id @default(cuid())
+  quantidade      Int
+  quantidadeMin   Int       @default(5) @map("quantidade_min")
+
+  produto         Produto   @relation(fields: [produtoId], references: [id])
+  produtoId       String    @unique @map("produto_id")
+
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
 }
