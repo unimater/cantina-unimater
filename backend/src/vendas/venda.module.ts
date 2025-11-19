@@ -5,7 +5,8 @@ import { VendaService } from './venda.service';
 
 @Module({
   controllers: [VendaController],
-  providers: [VendaService, PrismaService]
+  providers: [VendaService, PrismaService],
+  exports: [VendaService],
 })
 export class VendaModule {}
 

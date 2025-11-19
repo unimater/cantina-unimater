@@ -1,15 +1,24 @@
--- CreateTable
-CREATE TABLE "public"."Venda" (
-    "id" TEXT NOT NULL,
-    "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "valorTotal" DECIMAL(65,30) NOT NULL,
-    "observacoes" TEXT,
-    "forma_pagamento_id" TEXT NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3),
+/*
+  Warnings:
 
-    CONSTRAINT "Venda_pkey" PRIMARY KEY ("id")
-);
+  - You are about to drop the column `created_by` on the `User` table. All the data in the column will be lost.
+  - You are about to drop the column `formaPagamentoId` on the `Venda` table. All the data in the column will be lost.
+  - Added the required column `forma_pagamento_id` to the `Venda` table without a default value. This is not possible if the table is not empty.
+  - Added the required column `valorTotal` to the `Venda` table without a default value. This is not possible if the table is not empty.
+
+*/
+-- DropForeignKey
+ALTER TABLE "public"."Venda" DROP CONSTRAINT "Venda_formaPagamentoId_fkey";
+
+-- AlterTable
+ALTER TABLE "public"."User" DROP COLUMN "created_by";
+
+-- AlterTable
+ALTER TABLE "public"."Venda" DROP COLUMN "formaPagamentoId",
+ADD COLUMN     "data" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN     "forma_pagamento_id" TEXT NOT NULL,
+ADD COLUMN     "observacoes" TEXT,
+ADD COLUMN     "valorTotal" DECIMAL(65,30) NOT NULL;
 
 -- CreateTable
 CREATE TABLE "public"."ItemVenda" (

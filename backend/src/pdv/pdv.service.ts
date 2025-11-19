@@ -21,9 +21,10 @@ export class PdvService {
         valorTotalVenda: concluirVendaPdvDto.valorTotalVenda,
         valorTotalDesconto: concluirVendaPdvDto.valorTotalDesconto,
         valorLiquido: valorLiquidoVenda,
+        valorTotal: valorLiquidoVenda,
         formaPagamentoId: concluirVendaPdvDto.formaPagamentoId,
         usuarioId: concluirVendaPdvDto.usuarioId,
-        createdAt: new Date().toISOString(),
+        data: new Date(),
 
         produtos: {
           create: produtos.map((p) => ({
