@@ -113,36 +113,6 @@ export class DashboardService {
   }
 
   async getControleEstoque(): Promise<ItemEstoqueDto[]> {
-    const produtos = await this.prisma.produto.findMany({
-      where: { situacao: true },
-      select: {
-        id: true,
-        descricao: true,
-        quantidadeEstoque: true,
-        estoqueMinimo: true,
-      },
-    });
-
-    return produtos.map((produto) => {
-      let status: 'Esgotado' | 'Baixo estoque' | 'Disponível';
-      const quantidade = Number(produto.quantidadeEstoque);
-      const quantidadeMin = Number(produto.estoqueMinimo);
-
-      if (quantidade === 0) {
-        status = 'Esgotado';
-      } else if (quantidade <= quantidadeMin) {
-        status = 'Baixo estoque';
-      } else {
-        status = 'Disponível';
-      }
-
-      return {
-        id: produto.id,
-        produto: produto.descricao,
-        quantidade,
-        quantidadeMin,
-        status,
-      };
-    });
+    return this.movimentacaoEstoqueService.listarEstoqueComStatus();
   }
 }
