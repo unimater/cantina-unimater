@@ -22,20 +22,20 @@ export class VendaService {
     const where: any = {};
 
     if (filters?.periodo?.startDate || filters?.periodo?.endDate) {
-  const createdAt: any = {};
+      const createdAt: any = {};
 
-  if (filters.periodo.startDate) {
-    const start = new Date(`${filters.periodo.startDate}T00:00:00.000`);
-    createdAt.gte = start;
-  }
+      if (filters.periodo.startDate) {
+        const start = new Date(`${filters.periodo.startDate}T00:00:00.000`);
+        createdAt.gte = start;
+      }
 
-  if (filters.periodo.endDate) {
-    const end = new Date(`${filters.periodo.endDate}T23:59:59.999`);
-    createdAt.lte = end;
-  }
+      if (filters.periodo.endDate) {
+        const end = new Date(`${filters.periodo.endDate}T23:59:59.999`);
+        createdAt.lte = end;
+      }
 
-  where.createdAt = createdAt;
-}
+      where.createdAt = createdAt;
+    }
 
     if (filters?.formasPagamento && filters.formasPagamento.length > 0) {
       where.formaPagamentoId = { in: filters.formasPagamento };
