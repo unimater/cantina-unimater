@@ -59,7 +59,8 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
         descricao: produto.descricao,
         valor: produto.valor,
         situacao: produto.situacao,
-        categoriaId: produto.categoria.id
+        categoriaId: produto.categoria.id,
+        estoqueMinimo: produto.estoqueMinimo,
       });
     },
     onSuccess: () => {
@@ -76,7 +77,8 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
       nome: '',
       valor: 0,
       situacao: true,
-      categoriaId: ''
+      categoriaId: '',
+      estoqueMinimo: 0,
     },
   });
 
@@ -104,7 +106,8 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
       situacao: data.situacao,
       createdAt: new Date().toISOString(),
       updatedAt: '',
-      categoria: categoriaSelecionada!
+      categoria: categoriaSelecionada!,
+      estoqueMinimo: data.estoqueMinimo,
     };
 
     createMutation.mutate(novoProduto)
@@ -199,6 +202,32 @@ const CriarProduto: React.FC<CriarProdutoProps> = ({
                       decimalSeparator=","
                       prefix="R$ "
                       decimalScale={2}
+                      fixedDecimalScale
+                      allowNegative={false}
+                      customInput={Input}
+                      value={field.value}
+                      onValueChange={(values) => {
+                        field.onChange(values.floatValue || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Estoque Minimo */}
+            <FormField
+              control={form.control}
+              name="estoqueMinimo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estoque Mínimo</FormLabel>
+                  <FormControl>
+                    <NumericFormat
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      decimalScale={0}
                       fixedDecimalScale
                       allowNegative={false}
                       customInput={Input}

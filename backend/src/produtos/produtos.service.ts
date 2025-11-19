@@ -8,7 +8,7 @@ export class ProdutosService {
     constructor(private readonly prisma: PrismaService) { }
 
     async create(dto: CreateProdutoDto, user: string) {
-        const { descricao, valor, situacao, imagem, categoriaId } = dto;
+        const { descricao, valor, situacao, imagem, categoriaId, estoqueMinimo } = dto;
 
         if (!descricao || valor === undefined || !categoriaId) {
             throw new BadRequestException(
@@ -33,7 +33,8 @@ export class ProdutosService {
             valor,
             situacao: situacao ?? true,
             categoriaId,
-            createdBy: user
+            createdBy: user,
+            estoqueMinimo,
         };
 
         if (imagem) {
@@ -81,6 +82,7 @@ export class ProdutosService {
         if (dto.situacao !== undefined) data.situacao = dto.situacao;
         if (dto.imagem !== undefined) data.imagem = dto.imagem;
         if (dto.categoriaId) data.categoriaId = dto.categoriaId;
+        if (dto.estoqueMinimo !== undefined) data.estoqueMinimo = dto.estoqueMinimo;
 
         return this.prisma.produto.update({
             where: { id },

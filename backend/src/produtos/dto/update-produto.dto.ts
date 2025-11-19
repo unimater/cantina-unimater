@@ -7,5 +7,6 @@ export class UpdateProdutoDto extends PartialType(CreateProdutoDto) {
     situacao?: boolean;
     imagem?: string;
     categoriaId?: string;
+    estoqueMinimo?: number;
 }
 
