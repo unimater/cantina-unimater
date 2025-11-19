@@ -45,7 +45,7 @@ export function Dashboard() {
   return (
     <div className='space-y-6'>
       <div>
-        <h1 className='text-3xl font-bold text-gray-900'>Bem-vindo, {user?.nome || 'Usuário'}!</h1>
+        <h1 className='text-3xl font-bold text-gray-900'>Bem-vindo, {user?.name || 'Usuário'}!</h1>
         <p className='mt-2 text-gray-600'>
           Aqui está um resumo do que está acontecendo na cantina hoje.
         </p>

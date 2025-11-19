@@ -13,6 +13,8 @@ import { EsqSenha } from '@/pages/Login/EsqSenha';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import ListarEstoque from '@/pages/Estoque/ListarEstoque';
+import Fechamento from '@/pages/Fechamento/Fechamento';
+import RelatorioFechamento from '@/pages/Fechamento/RelatorioFechamento';
 
 function App() {
   const queryClient = new QueryClient();
@@ -73,6 +75,16 @@ function App() {
           <Route 
             path='estoque'
             element={<ListarEstoque />}
+          />
+
+          <Route
+            path='fechamento'
+            element={<Fechamento />}
+          />
+
+          <Route
+            path='fechamento/relatorio'
+            element={<RelatorioFechamento />}
           />
         </Route>
 
