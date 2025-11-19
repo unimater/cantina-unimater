@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 import type { Produto } from '@/type/Produto';
 import { produtoSchema } from '@/lib/ProdutoSchema';
 import { NumericFormat } from 'react-number-format';
-import { PencilLine } from 'lucide-react';
+import { CircleAlertIcon, PencilLine } from 'lucide-react';
 import type { Categoria } from '@/type/Categoria';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/api/api';
@@ -61,7 +61,8 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
         descricao: produto.descricao,
         valor: produto.valor,
         situacao: produto.situacao,
-        categoriaId: produto.categoria.id
+        categoriaId: produto.categoria.id,
+        estoqueMinimo: produto.estoqueMinimo,
        });
     },
     onSuccess: () => {
@@ -79,6 +80,7 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
       valor: produto.valor,
       situacao: produto.situacao,
       categoriaId: produto.categoria?.id ?? '',
+      estoqueMinimo: produto.estoqueMinimo ?? 0,
     },
   });
 
@@ -108,6 +110,7 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
       situacao: data.situacao,
       categoria: categoriaSelecionada,
       updatedAt: new Date().toISOString(),
+      estoqueMinimo: data.estoqueMinimo ?? 0,
     };
 
     updateMutation.mutate(produtoAtualizado)
@@ -225,6 +228,32 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
 
             <FormField
               control={form.control}
+              name="estoqueMinimo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estoque Mínimo</FormLabel>
+                  <FormControl>
+                    <NumericFormat
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      decimalScale={0}
+                      fixedDecimalScale
+                      allowNegative={false}
+                      customInput={Input}
+                      value={field.value}
+                      onValueChange={(values) => {
+                        field.onChange(values.floatValue || 0);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+
+            <FormField
+              control={form.control}
               name="situacao"
               render={({ field }) => (
                 <FormItem className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
@@ -235,6 +264,21 @@ const EditarProduto: React.FC<EditarProdutoProps> = ({
                 </FormItem>
               )}
             />
+
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-medium">Quantidade em Estoque:</h3>
+              {
+                produto.quantidadeEstoque! <= produto.estoqueMinimo! ? (
+                  <div className="flex items-center justify-center gap-2 text-red-600 font-medium bg-red-100 px-2 py-1 rounded">
+                    {produto.quantidadeEstoque}
+                    <CircleAlertIcon className="h-4 w-4" />
+                  </div>
+                ) : (
+                  <span>{produto.quantidadeEstoque}</span>
+                )
+              }
+            </div>
+
 
             <div className="flex justify-end gap-2 pt-4">
               <DialogClose asChild>

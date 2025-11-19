@@ -8,5 +8,7 @@ export const produtoSchema = z
       .max(300, 'Descrição deve ter no máximo 300 caracteres'),
     situacao: z.boolean(),
     categoriaId: z.string(),
-    valor: z.number().min(0)
+    valor: z.number().min(0),
+    estoqueMinimo: z.number().min(0).optional(),
+    quantidadeEstoque: z.number().min(0).optional(),
   })
