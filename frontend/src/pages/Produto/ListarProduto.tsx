@@ -38,13 +38,7 @@ const ListarProdutos: React.FC = () => {
   });
 
   useEffect(() => {
-    if (Array.isArray(data)) {
-      setProdutos(data as Produto[]);
-    } else if ((data as any)?.data && Array.isArray((data as any).data)) {
-      setProdutos((data as any).data as Produto[]);
-    } else {
-      setProdutos([]);
-    }
+      setProdutos(data || []);
   }, [data])
   
   const filtrados = useMemo(

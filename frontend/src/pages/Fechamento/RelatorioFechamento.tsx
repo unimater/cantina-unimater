@@ -22,7 +22,6 @@ export default function RelatorioFechamento() {
       return response.data;
     },
     onSuccess: (data) => {
-      console.log(data.vendas)
       setVendas(data.vendas || []);
       setSummary(data.summary || null);
     },
