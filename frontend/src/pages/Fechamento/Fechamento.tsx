@@ -9,7 +9,6 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function Fechamento() {
   const navigate = useNavigate();
-  // data fetched via react-query
 
   const [startDate, setStartDate] = React.useState<string>('');
   const [endDate, setEndDate] = React.useState<string>('');
@@ -73,12 +72,12 @@ export default function Fechamento() {
                 <label className='block text-sm font-medium text-gray-700'>Forma de Pagamento</label>
                 <Select onValueChange={(v) => setFormaSelecionada(v)}>
                     <SelectTrigger>
-                    <SelectValue placeholder='Selecione' />
+                      <SelectValue placeholder='Selecione' />
                     </SelectTrigger>
                     <SelectContent>
-                    {(Array.isArray(formasPagamento) ? formasPagamento : []).map((f: any) => (
-                        <SelectItem key={f.id} value={String(f.id)}>{f.name || f.nome}</SelectItem>
-                    ))}
+                      {(Array.isArray(formasPagamento) ? formasPagamento : []).map((f: any) => (
+                          <SelectItem key={f.id} value={String(f.id)}>{f.name || f.nome}</SelectItem>
+                      ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -87,12 +86,12 @@ export default function Fechamento() {
                 <label className='block text-sm font-medium text-gray-700'>Produto</label>
                 <Select onValueChange={(v) => setProdutoSelecionado(v)}>
                     <SelectTrigger>
-                    <SelectValue placeholder='Selecione' />
+                      <SelectValue placeholder='Selecione' />
                     </SelectTrigger>
                     <SelectContent>
-                    {(Array.isArray(produtos) ? produtos : []).map((p: any) => (
-                        <SelectItem key={p.id} value={String(p.id)}>{p.descricao || p.nome}</SelectItem>
-                    ))}
+                      {(Array.isArray(produtos) ? produtos : []).map((p: any) => (
+                          <SelectItem key={p.id} value={String(p.id)}>{p.descricao || p.nome}</SelectItem>
+                      ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -101,18 +100,18 @@ export default function Fechamento() {
                 <label className='block text-sm font-medium text-gray-700'>Categoria</label>
                 <Select onValueChange={(v) => setCategoriaSelecionada(v)}>
                     <SelectTrigger>
-                    <SelectValue placeholder='Selecione' />
+                      <SelectValue placeholder='Selecione' />
                     </SelectTrigger>
                     <SelectContent>
-                    {(Array.isArray(categorias) ? categorias : []).map((c: any) => (
-                        <SelectItem key={c.id} value={String(c.id)}>{c.descricao || c.nome}</SelectItem>
-                    ))}
+                      {(Array.isArray(categorias) ? categorias : []).map((c: any) => (
+                          <SelectItem key={c.id} value={String(c.id)}>{c.descricao || c.nome}</SelectItem>
+                      ))}
                     </SelectContent>
                 </Select>
             </div>
 
             <div className='md:col-span-3 flex justify-end'>
-                <Button onClick={handleGerar}>Gerar relatório</Button>
+                <Button className='cursor-pointer' onClick={handleGerar}>Gerar relatório</Button>
             </div>
         </CardContent>
     </Card>

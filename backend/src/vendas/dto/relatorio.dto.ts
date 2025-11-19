@@ -8,7 +8,9 @@ export class RelatorioFilters {
 export class RelatorioResponse {
   vendas: any[];
   summary: {
-    total: number;
+    netTotal: number;
+    grossTotal: number;
+    discounts: number;
     mostSold?: any;
     mostUsedPayment?: any;
   };

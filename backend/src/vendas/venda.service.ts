@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import type { Produto, Venda } from '../../generated/prisma'; 
+import { Venda } from '../../generated/prisma'; 
 import { ProdutoMaisVendido } from './dto/produto-mais-vendido.dto';
-import { RelatorioFilters } from './dto/relatorio.dto';
-import { Buffer } from 'buffer';
+import { RelatorioFilters, RelatorioResponse } from './dto/relatorio.dto';
 
 @Injectable()
 export class VendaService {
@@ -18,7 +17,39 @@ export class VendaService {
     });
   }
 
-  async gerarRelatorio(filters: RelatorioFilters): Promise<any> {
+  async findProdutosMaisVendidos(): Promise<ProdutoMaisVendido[]> {
+    const produtos = await this.prismaService.vendaProduto.groupBy({
+      by: ['produtoId'],
+      _sum: {
+        quantidade: true,
+      },
+      orderBy: {
+        _sum: {
+          quantidade: 'desc',
+        },
+      },
+    });
+
+    const top5 = produtos.slice(0, 5);
+
+    const result = await Promise.all(
+      top5.map(async (p) => {
+        const produtoInfo = await this.prismaService.produto.findUnique({
+          where: { id: p.produtoId },
+        });
+
+        return {
+          produtoId: p.produtoId,
+          produto: produtoInfo,
+          quantidadeVendida: p._sum.quantidade || 0,
+        };
+      })
+    );
+
+    return result;
+  }
+
+  async gerarRelatorio(filters: RelatorioFilters): Promise<RelatorioResponse> {
     const where: any = {};
 
     if (filters?.periodo?.startDate || filters?.periodo?.endDate) {
@@ -60,17 +91,6 @@ export class VendaService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const vendasNormalized = vendas.map((v) => {
-      const val = (v as any).valorTotalVenda ?? (v as any).valorLiquido ?? 0;
-      const num = typeof val === 'object' && typeof val.toNumber === 'function' ? val.toNumber() : Number(val);
-      return {
-        ...v,
-        total: isNaN(num) ? 0 : num,
-      } as any;
-    });
-
-    const total = vendasNormalized.reduce((sum, v) => sum + (v.total || 0), 0);
-
     const produtoCounts: Record<string, { nome: string; quantidade: number }> = {};
     const pagamentoCounts: Record<string, { nome: string; count: number }> = {};
 
@@ -94,47 +114,19 @@ export class VendaService {
 
     const mostSold = Object.entries(produtoCounts).sort((a, b) => b[1].quantidade - a[1].quantidade)[0];
     const mostUsedPayment = Object.entries(pagamentoCounts).sort((a, b) => b[1].count - a[1].count)[0];
+    const netTotal = vendas.reduce((sum, venda) => sum + (Number(venda.valorLiquido) || 0), 0);
+    const grossTotal = vendas.reduce((sum, venda) => sum + (Number(venda.valorTotalVenda) || 0), 0);
+    const discounts = vendas.reduce((sum, venda) => sum + (Number(venda.valorTotalDesconto) || 0), 0);
 
     return {
-      vendas: vendasNormalized,
+      vendas: vendas,
       summary: {
-        total,
+        netTotal,
+        grossTotal,
+        discounts,
         mostSold: mostSold ? { id: mostSold[0], nome: mostSold[1].nome, quantidade: mostSold[1].quantidade } : null,
         mostUsedPayment: mostUsedPayment ? { id: mostUsedPayment[0], nome: mostUsedPayment[1].nome, count: mostUsedPayment[1].count } : null,
       },
     };
   }
-
-  async findProdutosMaisVendidos(): Promise<ProdutoMaisVendido[]> {
-    const produtos = await this.prismaService.vendaProduto.groupBy({
-      by: ['produtoId'],
-      _sum: {
-        quantidade: true,
-      },
-      orderBy: {
-        _sum: {
-          quantidade: 'desc',
-        },
-      },
-    });
-
-    const top5 = produtos.slice(0, 5);
-
-    const result = await Promise.all(
-      top5.map(async (p) => {
-        const produtoInfo = await this.prismaService.produto.findUnique({
-          where: { id: p.produtoId },
-        });
-
-        return {
-          produtoId: p.produtoId,
-          produto: produtoInfo,
-          quantidadeVendida: p._sum.quantidade || 0,
-        };
-      })
-    );
-
-    return result;
-  }
-  
 }

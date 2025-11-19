@@ -1,33 +1,44 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '@/api/api';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { toast } from 'sonner';
 
 export default function RelatorioFechamento() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const filters = (location.state as any)?.filters || {};
+  const filters = useLocation().state?.filters || {};
 
   const [vendas, setVendas] = React.useState<any[]>([]);
   const [summary, setSummary] = React.useState<any>(null);
 
+  const mutation = useMutation({
+    mutationFn: async (filters) => {
+      const response = await api.post('/venda/relatorio', filters);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      console.log(data.vendas)
+      setVendas(data.vendas || []);
+      setSummary(data.summary || null);
+    },
+    onError: () => {
+      toast.error('Erro ao carregar relatório.');
+    },
+  });
+
+  const formatDateBR = (date: any) => {
+    if (!date) return '-';
+    const [year, month, day] = date.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   React.useEffect(() => {
-    async function load() {
-      try {
-        const response = await api.post('/venda/relatorio', filters);
-        setVendas(Array.isArray(response.data.vendas) ? response.data.vendas : (response.data.vendas || []));
-        setSummary(response.data.summary || null);
-      } catch (err) {
-        console.error(err);
-        toast.error('Erro ao carregar relatório.');
-      }
-    }
-    load();
+    mutation.mutate(filters);
   }, [filters]);
 
   function handleExportPdf() {
@@ -38,30 +49,45 @@ export default function RelatorioFechamento() {
 
       doc.setFontSize(11);
       const summaryY = 70;
-      doc.text(`Período: ${filters?.periodo?.startDate || '-'} até ${filters?.periodo?.endDate || '-'}`, 40, summaryY);
-      doc.text(`Valor Total: R$ ${summary ? Number(summary.total).toFixed(2) : '0.00'}`, 40, summaryY + 20);
+      const marginLeft = 40;
+      const marginRight = 40;
+      const pageWidth = typeof doc.internal.pageSize.getWidth === 'function' ? doc.internal.pageSize.getWidth() : (doc.internal.pageSize.width || 595.28);
+      doc.text(`Período: ${formatDateBR(filters?.periodo?.startDate)} até ${formatDateBR(filters?.periodo?.endDate)}`,  marginLeft, summaryY);
 
-      const columns = ['Data', 'Produtos', 'Quantidade', 'Valor', 'Pagamento'];
+      const availableWidth = pageWidth - marginLeft - marginRight;
+      const colWidth = availableWidth / 3;
+      const colY = summaryY + 20;
+
+      doc.text('Valor Total Bruto', marginLeft, colY);
+      doc.text('Valor Total Líquido', marginLeft + colWidth, colY);
+      doc.text('Valor Total de Descontos', marginLeft + colWidth * 2, colY);
+
+      const valueY = colY + 14;
+      doc.text(`R$ ${summary ? Number(summary.grossTotal).toFixed(2) : '0.00'}`, marginLeft, valueY);
+      doc.text(`R$ ${summary ? Number(summary.netTotal).toFixed(2) : '0.00'}`, marginLeft + colWidth, valueY);
+      doc.text(`R$ ${summary ? Number(summary.discounts).toFixed(2) : '0.00'}`, marginLeft + colWidth * 2, valueY);
+
+      const columns = ['Data', 'Produtos', 'Quantidade', 'Valor', 'Desconto', 'Pagamento'];
       const rows: any[] = (vendas || []).map((v: any) => {
-        const produtosText = (v.produtos || []).map((p: any) => p.produto?.descricao || p.produto?.nome || '-').join(', ');
+        const produtosText = (v.produtos || []).map((p: any) => p.produto?.descricao).join(', ');
         const quantidade = (v.produtos || []).reduce((s: number, p: any) => s + (p.quantidade || 0), 0);
-        const valor = Number(v.total || 0).toFixed(2);
-        const pagamento = v.formaPagamento?.name || v.formaPagamento?.nome || '-';
-        return [new Date(v.createdAt).toLocaleString(), produtosText, String(quantidade), `R$ ${valor}`, pagamento];
+        const valor = Number(v.valorTotalVenda || 0).toFixed(2);
+        const desconto = Number(v.valorTotalDesconto || 0).toFixed(2);
+        const pagamento = v.formaPagamento?.name || '-';
+        return [new Date(v.createdAt).toLocaleString(), produtosText, String(quantidade), `R$ ${valor}`, `R$ ${desconto}`, pagamento];
       });
 
-      autoTable(doc as any, {
+      autoTable(doc, {
         head: [columns],
         body: rows,
-        startY: summaryY + 50,
+        startY: valueY + 20,
         styles: { fontSize: 10 },
         headStyles: { fillColor: [40, 116, 240] },
-        margin: { left: 40, right: 40 },
+        margin: { left: marginLeft, right: marginRight },
       });
 
       doc.save('relatorio_fechamento.pdf');
     } catch (err) {
-      console.error(err);
       toast.error('Erro ao gerar PDF.');
     }
   }
@@ -76,6 +102,7 @@ export default function RelatorioFechamento() {
             <CardHeader>
               <CardTitle>Vendas</CardTitle>
             </CardHeader>
+
             <CardContent className='p-0'>
               <div className='max-h-[60vh] overflow-y-auto'>
                 <Table>
@@ -85,9 +112,11 @@ export default function RelatorioFechamento() {
                       <TableHead>Produtos</TableHead>
                       <TableHead>Quantidade</TableHead>
                       <TableHead>Valor</TableHead>
+                      <TableHead>Desconto</TableHead>
                       <TableHead>Pagamento</TableHead>
                     </TableRow>
                   </TableHeader>
+
                   <TableBody>
                     {(vendas || []).length === 0 && (
                       <TableRow>
@@ -96,11 +125,12 @@ export default function RelatorioFechamento() {
                     )}
                     {(vendas || []).map((v) => (
                       <TableRow key={v.id}>
-                        <TableCell>{new Date(v.createdAt).toLocaleString()}</TableCell>
-                        <TableCell>{(v.produtos || []).map((p: any) => p.produto?.descricao || p.produto?.nome).join(', ')}</TableCell>
+                        <TableCell>{new Date(v.createdAt).toLocaleDateString('pt-BR')}</TableCell>
+                        <TableCell>{(v.produtos || []).map((p: any) => p.produto?.descricao).join(', ')}</TableCell>
                         <TableCell>{(v.produtos || []).reduce((s: number, p: any) => s + (p.quantidade || 0), 0)}</TableCell>
-                        <TableCell>{`R$ ${Number(v.total || 0).toFixed(2)}`}</TableCell>
-                        <TableCell>{v.formaPagamento?.name || v.formaPagamento?.nome || '-'}</TableCell>
+                        <TableCell>{`R$ ${Number(v.valorTotalVenda || 0).toFixed(2)}`}</TableCell>
+                        <TableCell>{`R$ ${Number(v.valorTotalDesconto || 0).toFixed(2)}`}</TableCell>
+                        <TableCell>{v.formaPagamento?.name || '-'}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -115,15 +145,26 @@ export default function RelatorioFechamento() {
             <CardHeader>
               <CardTitle>Valores Gerais</CardTitle>
             </CardHeader>
+
             <CardContent>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='flex gap-4'>
-                    <strong>Valor Total: </strong><span>{summary ? `R$ ${Number(summary.total).toFixed(2)}` : '-'}</span>
+                <div className='flex gap-4 '>
+                    <strong>Valor Total Bruto: </strong><span>{summary ? `R$ ${Number(summary.grossTotal).toFixed(2)}` : '-'}</span>
                 </div>
-                <div className='flex gap-4'>
+
+                <div className='flex gap-4 '>
+                    <strong>Valor Total Líquido: </strong><span>{summary ? `R$ ${Number(summary.netTotal).toFixed(2)}` : '-'}</span>
+                </div>
+
+                <div className='flex gap-4 '>
+                    <strong>Valor Total de Descontos: </strong><span>{summary ? `R$ ${Number(summary.discounts).toFixed(2)}` : '-'}</span>
+                </div>
+
+                <div className='flex gap-4 '>
                     <strong>Produto Mais Vendido: </strong><span>{summary?.mostSold?.nome || '-'}</span>
                 </div>
-                <div className='flex gap-4'>
+
+                <div className='flex gap-4 '>
                     <strong>Pagamento Mais Usado: </strong><span>{summary?.mostUsedPayment?.nome || '-'}</span>
                 </div>
               </div>
@@ -132,10 +173,10 @@ export default function RelatorioFechamento() {
         </section>
       </main>
 
-      <footer className='py-6'>
+      <footer>
         <div className='flex justify-center gap-3'>
-          <Button variant='ghost' onClick={() => navigate(-1)}>Voltar</Button>
-          <Button onClick={handleExportPdf}>Exportar PDF</Button>
+          <Button className='cursor-pointer' variant='outline' onClick={() => navigate(-1)}>Voltar</Button>
+          <Button className='cursor-pointer' onClick={handleExportPdf}>Exportar PDF</Button>
         </div>
       </footer>
     </div>
