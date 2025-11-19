@@ -90,7 +90,7 @@ model User {
   produtos         Produto[]
   categorias       Categoria[]
   despesas         Despesa[]
-  formasPagamento  formasPagamento[]
+  formasPagamento  FormasPagamento[]
   pedidos          Pedido[]
 }
 
@@ -106,9 +106,6 @@ model FormasPagamento {
 
   createdBy    String       @map("created_by")
   user         User         @relation(fields: [createdBy], references: [id])
-
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime?    @updatedAt
 
   venda Venda[]
 }
@@ -160,7 +157,7 @@ model Venda {
   valorTotalDesconto Decimal           @map("valor_total_desconto")
   valorLiquido       Decimal           @map("valor_liquido")
 
-  formaPagamento     formasPagamento   @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamento     FormasPagamento   @relation(fields: [formaPagamentoId], references: [id])
   formaPagamentoId   String
 
   usuario            User              @relation(fields: [usuarioId], references: [id])

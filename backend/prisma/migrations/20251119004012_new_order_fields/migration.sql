@@ -11,6 +11,12 @@ ALTER TABLE "public"."Pedido" DROP CONSTRAINT "Pedido_forma_pagamento_id_fkey";
 -- DropForeignKey
 ALTER TABLE "public"."Pedido" DROP CONSTRAINT "Pedido_usuario_id_fkey";
 
+-- DropForeignKey
+ALTER TABLE "public"."Venda" DROP CONSTRAINT "Venda_formaPagamentoId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "public"."formasPagamento" DROP CONSTRAINT "formasPagamento_created_by_fkey";
+
 -- AlterTable
 ALTER TABLE "public"."Pedido" ADD COLUMN     "categoria" TEXT,
 ADD COLUMN     "descricao" TEXT NOT NULL,
@@ -28,12 +34,19 @@ CREATE TABLE "public"."FormasPagamento" (
     "status" BOOLEAN NOT NULL DEFAULT true,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3),
+    "created_by" TEXT NOT NULL,
 
     CONSTRAINT "FormasPagamento_pkey" PRIMARY KEY ("id")
 );
+
+-- AddForeignKey
+ALTER TABLE "public"."FormasPagamento" ADD CONSTRAINT "FormasPagamento_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Pedido" ADD CONSTRAINT "Pedido_usuario_id_fkey" FOREIGN KEY ("usuario_id") REFERENCES "public"."User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."Pedido" ADD CONSTRAINT "Pedido_forma_pagamento_id_fkey" FOREIGN KEY ("forma_pagamento_id") REFERENCES "public"."FormasPagamento"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."Venda" ADD CONSTRAINT "Venda_formaPagamentoId_fkey" FOREIGN KEY ("formaPagamentoId") REFERENCES "public"."FormasPagamento"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
