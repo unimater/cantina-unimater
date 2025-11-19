@@ -5,11 +5,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import type { Produto } from "@/type/Produto";
 import type { Usuario } from "@/type/Usuario";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { useState } from "react";
 import { PackageCheck, PackageMinus, EraserIcon, ChevronDownIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import api from "@/api/api";
 
 interface ConsultarEstoqueProps {
   onFiltrar: (filtros: {
@@ -27,21 +27,28 @@ export function ConsultarEstoque({ onFiltrar }: ConsultarEstoqueProps) {
     const [openDataFim, setOpenDataFim] = useState(false);
 
 
-    const { data: produto } = useQuery({
-        queryKey: ['getProdutos'],
+    const { 
+        data: produto,
+        isLoading: produtoLoading
+     } = useQuery({
+        queryKey: ['getProdutosEstoque'],
         queryFn: async () => {
-        const response = await axios.get('http://localhost:3000/produtos');
+        const response = await api.get('/produtos');
         return response.data as Produto[];
         },
     });
 
-    const { data: usuario } = useQuery({
-        queryKey: ['getUsuarios'],
+    const { 
+        data: usuario,
+        isLoading: usuarioLoading
+     } = useQuery({
+        queryKey: ['getUsuariosEstoque'],
         queryFn: async () => {
-        const response = await axios.get('http://localhost:3000/users');
+        const response = await api.get('/users');
         return response.data as Usuario[];
         },
     });
+
 
     function zerarFiltros(){
         setTipo("");
@@ -64,6 +71,10 @@ export function ConsultarEstoque({ onFiltrar }: ConsultarEstoqueProps) {
     const [usuarioId, setUsuarioId] = useState("");
     const [dataInicio, setDataInicio] = useState<Date | undefined>();
     const [dataFim, setDataFim] = useState<Date | undefined>();
+
+    if (produtoLoading || usuarioLoading) {
+        return <div>Carregando...</div>;
+    }
 
     return (
         <Dialog
@@ -121,7 +132,7 @@ export function ConsultarEstoque({ onFiltrar }: ConsultarEstoqueProps) {
                                 <SelectGroup>
                                     <SelectLabel>Produto</SelectLabel>
                                     {produto?.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.descricao}</SelectItem>
+                                        <SelectItem key={p.id} value={p.id!}>{p.descricao}</SelectItem>
                                     ))}
                                 </SelectGroup>
                             </SelectContent>
@@ -147,7 +158,7 @@ export function ConsultarEstoque({ onFiltrar }: ConsultarEstoqueProps) {
                                 <SelectGroup>
                                     <SelectLabel>Usuário</SelectLabel>
                                     {usuario?.map(u => (
-                                        <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                                        <SelectItem key={u.id} value={u.id!}>{u.name}</SelectItem>
                                     ))}
                                 </SelectGroup>
                             </SelectContent>
