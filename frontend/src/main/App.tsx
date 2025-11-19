@@ -13,6 +13,7 @@ import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
+import ListarEstoque from '@/pages/Estoque/ListarEstoque';
 
 function App() {
   const queryClient = new QueryClient();
@@ -51,14 +52,36 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Dashboard />} />
-          <Route path="usuarios" element={<ListarUsuarios />} />
-          <Route path="despesas" element={<ListarDespesas />} />
-          <Route path="formas-pagamento" element={<FormasPagamento />} />
-          <Route path="categorias" element={<CategoriasPage />} />
-          <Route path="produtos" element={<ListarProdutos />} />
+          <Route
+            index
+            element={<Dashboard />}
+          />
+          <Route
+            path='usuarios'
+            element={<ListarUsuarios />}
+          />
+          <Route
+            path='despesas'
+            element={<ListarDespesas />}
+          />
+          <Route
+            path='formas-pagamento'
+            element={<FormasPagamento />}
+          />
+          <Route
+            path='categorias'
+            element={<CategoriasPage />}
+          />
+          <Route
+            path='produtos'
+            element={<ListarProdutos />}
+          />
 
-          {/* ✔ ROTA CORRIGIDA PARA PEDIDOS */}
+          <Route 
+            path='estoque'
+            element={<ListarEstoque />}
+          />
+
           <Route path="pedidos" element={<ListarPedido />} />
         </Route>
 

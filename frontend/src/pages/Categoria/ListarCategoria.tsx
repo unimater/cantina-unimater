@@ -15,9 +15,8 @@ import CriarCategoria from './CriarCategoria';
 import EditarCategoria from './EditarCategoria';
 import { toast } from 'sonner';
 import type { Categoria } from '@/type/Categoria';
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/api/api';
 
 const ListarCategoria: React.FC = () => {
   const [filtro, setFiltro] = useState('');
@@ -26,14 +25,14 @@ const ListarCategoria: React.FC = () => {
   const { data: categorias = [], error } = useQuery({
     queryKey: ['getCategorias'],
     queryFn: async () => {
-      const response = await axios.get('http://localhost:3000/categorias');
+      const response = await api.get('http://localhost:3000/categorias');
       return response.data as Categoria[];
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await axios.delete(`http://localhost:3000/categorias/${id}`);
+      await api.delete(`http://localhost:3000/categorias/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['getCategorias'] });

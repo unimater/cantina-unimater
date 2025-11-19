@@ -10,7 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
-import { usuarioSchema } from '@/lib/UsuarioSchema';
+import { usuarioSchemaCriar } from '@/lib/UsuarioSchema';
 import {
   Form,
   FormControl,
@@ -24,8 +24,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import type { Usuario } from '@/type/Usuario';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import api from '@/api/api';
 
-type FormValues = z.infer<typeof usuarioSchema>;
+type FormValues = z.infer<typeof usuarioSchemaCriar>;
 
 interface CriarUsuarioProps {
   onUsuarioCriado: (usuario: Usuario) => void;
@@ -35,12 +37,37 @@ interface CriarUsuarioProps {
 const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosExistentes }) => {
   const [open, setOpen] = useState(false);
   const [temAlteracao, setTemAlteracao] = useState(false);
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: async (novoUsuario: Omit<Usuario, 'id'>) => {
+      const response = await api.post('http://localhost:3000/users', novoUsuario);
+      return response.data;
+    },
+    onSuccess: usuarioCriado => {
+      queryClient.invalidateQueries({ queryKey: ['getUsuarios'] });
+      onUsuarioCriado(usuarioCriado);
+      toast.success('Sucesso!', {
+        description: 'O usuário foi incluído com sucesso.',
+      });
+      form.reset();
+      setOpen(false);
+    },
+    onError: (error: { response: { data: { message: string } } }) => {
+      const message = error.response?.data?.message || 'Não foi possível criar o usuário.';
+
+      toast.error('Erro!', {
+        description: message,
+      });
+    },
+  });
 
   const form = useForm({
-    resolver: zodResolver(usuarioSchema),
+    resolver: zodResolver(usuarioSchemaCriar),
     defaultValues: {
       situacao: true,
       nome: '',
+      cpf: '',
       usuario: '',
       senha: '',
       confirmarSenha: '',
@@ -66,7 +93,7 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
         .replace(/[\u0300-\u036f]/g, '');
 
     const nomeDuplicado = usuariosExistentes.some(
-      u => nomeNormalizado(u.nome) === nomeNormalizado(data.nome)
+      u => nomeNormalizado(u.name) === nomeNormalizado(data.nome)
     );
 
     if (nomeDuplicado) {
@@ -76,7 +103,7 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
       return;
     }
 
-    const loginDuplicado = usuariosExistentes.some(u => u.usuario === data.usuario);
+    const loginDuplicado = usuariosExistentes.some(u => u.username === data.usuario);
     if (loginDuplicado) {
       toast.error('Não foi possível salvar o registro!', {
         description: 'O nome de usuário já está em uso por outro usuário. Verifique!',
@@ -85,21 +112,16 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
     }
 
     const novoUsuario: Usuario = {
-      id: Date.now(),
-      nome: data.nome,
-      situacao: data.situacao,
+      name: data.nome,
+      cpf: data.cpf,
+      active: data.situacao,
       email: data.email || undefined,
-      telefone: data.telefone || undefined,
-      usuario: data.usuario,
-      senha: data.senha,
+      phone: data.telefone || undefined,
+      username: data.usuario,
+      password: data.senha,
     };
 
-    onUsuarioCriado(novoUsuario);
-    toast.success('Sucesso!', {
-      description: 'O usuário foi incluído com sucesso.',
-    });
-    form.reset();
-    setOpen(false);
+    createMutation.mutate(novoUsuario);
   };
 
   return (
@@ -126,7 +148,7 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className='space-y-6'
+            className='space-y-4'
           >
             <div className='space-y-4 rounded-lg border p-4'>
               <h3 className='text-lg font-semibold'>Identificação</h3>
@@ -139,6 +161,23 @@ const CriarUsuario: React.FC<CriarUsuarioProps> = ({ onUsuarioCriado, usuariosEx
                     <FormControl>
                       <Input
                         placeholder='Digite o nome completo'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='cpf'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CPF</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder='000.000.000-00'
                         {...field}
                       />
                     </FormControl>

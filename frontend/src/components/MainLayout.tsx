@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, LogOut, Shapes, Boxes, CreditCard, DollarSignIcon, StickyNote } from 'lucide-react';
+import { Home, Users, LogOut, Shapes, Boxes, CreditCard, DollarSignIcon, StickyNote, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { authUtils } from '@/lib/auth';
@@ -63,6 +63,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       icon: StickyNote ,
       current: location.pathname ==='/pedido',
     },
+    {
+      "name": "Estoque",
+      "href": "/estoque",
+      "icon": PackageSearch,
+      "current": location.pathname === '/estoque'
+    },
   ];
 
   return (
@@ -79,11 +85,11 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className='flex items-center'>
             <div className='flex-shrink-0'>
               <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-sm font-medium text-white'>
-                {user?.nome?.charAt(0).toUpperCase() || 'U'}
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
             </div>
             <div className='ml-3'>
-              <p className='text-sm font-medium text-gray-700'>{user?.nome || 'Usuário'}</p>
+              <p className='text-sm font-medium text-gray-700'>{user?.name || 'Usuário'}</p>
               <p className='text-xs text-gray-500'>{user?.email}</p>
             </div>
           </div>

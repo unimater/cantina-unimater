@@ -9,19 +9,27 @@ datasource db {
 }
 
 model Produto {
-  id          String      @id @default(cuid())
-  descricao   String
-  valor       Decimal
-  situacao    Boolean
-  imagem      String?
+    id                      String    @id @default(cuid())
+    descricao               String
+    valor                   Decimal
+    situacao                Boolean
+    imagem                  String?
+    quantidadeEstoque       Decimal @default(0)
+    estoqueMinimo           Decimal @default(0)
 
-  categoria   Categoria   @relation(fields: [categoriaId], references: [id])
-  categoriaId String      @map("categoria_id")
+    categoria   Categoria @relation(fields: [categoriaId], references: [id])  
+    categoriaId String    @map("categoria_id")
 
-  createdAt   DateTime    @default(now()) @map("created_at")
-  updatedAt   DateTime?   @updatedAt      @map("updated_at")
+    movimentacaoEstoque MovimentacaoEstoque[]
 
-  itens       PedidoItem[]
+    createdBy   String    @map("created_by")
+    user        User      @relation(fields: [createdBy], references: [id])
+    
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime? @updatedAt @map("updated_at")
+
+    vendaProduto VendaProduto[]
+    itens        PedidoItem[]
 }
 
 model Categoria {
@@ -32,8 +40,11 @@ model Categoria {
 
   produtos    Produto[]
 
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime? @updatedAt      @map("updated_at")
+  createdBy String    @map("created_by")
+  user      User      @relation(fields: [createdBy], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 }
 
 enum TipoCategoria {
@@ -42,12 +53,15 @@ enum TipoCategoria {
 }
 
 model Despesa {
-  id          String   @id @default(cuid())
-  descricao   String   @unique
-  data        DateTime
-  valor       Decimal
-  fornecedor  String?
-  observacoes String?
+  id             String     @id @default(cuid())
+  descricao      String     @unique                                                     
+  data           DateTime                                    
+  valor          Decimal               
+  fornecedor     String?                   
+  observacoes    String?
+
+  createdBy      String     @map("created_by")
+  user           User       @relation(fields: [createdBy], references: [id])  
 
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime? @updatedAt      @map("updated_at")
@@ -63,12 +77,20 @@ model User {
   phone           String?    @db.VarChar(20)
   active          Boolean    @default(true)
 
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime?  @updatedAt
+  movimentacaoEstoque MovimentacaoEstoque[]
 
-  resetToken       String?
-  resetTokenExpiry DateTime?
+  created_by   String
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
 
+  resetToken       String?     
+  resetTokenExpiry DateTime?   
+  venda Venda[]
+
+  produtos         Produto[]
+  categorias       Categoria[]
+  despesas         Despesa[]
+  formasPagamento  formasPagamento[]
   pedidos          Pedido[]
 }
 
@@ -81,6 +103,14 @@ model FormasPagamento {
   updatedAt   DateTime?  @updatedAt      @map("updated_at")
 
   pedidos     Pedido[]
+
+  createdBy    String       @map("created_by")
+  user         User         @relation(fields: [createdBy], references: [id])
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime?    @updatedAt
+
+  venda Venda[]
 }
 
 model Pedido {
@@ -122,4 +152,62 @@ model PedidoItem {
 enum StatusPedido {
   FINALIZADO
   CANCELADO
+}
+
+model Venda {
+  id                 String            @id @default(cuid())
+  valorTotalVenda    Decimal           @map("valor_total_venda")
+  valorTotalDesconto Decimal           @map("valor_total_desconto")
+  valorLiquido       Decimal           @map("valor_liquido")
+
+  formaPagamento     formasPagamento   @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamentoId   String
+
+  usuario            User              @relation(fields: [usuarioId], references: [id])
+  usuarioId          String
+
+  produtos           VendaProduto[]
+
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime?         @updatedAt      @map("updated_at")
+}
+
+model VendaProduto {
+  id             String   @id @default(cuid())
+
+  produto        Produto  @relation(fields: [produtoId], references: [id])
+  produtoId      String
+
+  venda          Venda    @relation(fields: [vendaId], references: [id])
+  vendaId        String
+
+  quantidade     Int
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime? @updatedAt     @map("updated_at")
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+model MovimentacaoEstoque {
+  id                String @id @default(cuid())
+
+  produto           Produto @relation(fields: [produtoId], references: [id])
+  produtoId         String @map("produtoId")
+
+  usuario           User @relation(fields: [usuarioId], references: [id])
+  usuarioId         String @map("usuarioId")
+
+  tipo              TipoMovimentacao
+  motivo            String @db.VarChar(255)
+  quantidade        Decimal @db.Decimal(15, 2)
+  estoqueAnterior   Decimal @db.Decimal(15, 2)
+  estoqueAtual      Decimal @db.Decimal(15, 2)
+  observacoes       String? @db.VarChar(255)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime? @updatedAt
 }
