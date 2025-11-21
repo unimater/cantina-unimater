@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Venda } from '../../generated/prisma'; 
 import { ProdutoMaisVendido } from './dto/produto-mais-vendido.dto';
-import { RelatorioFilters, RelatorioResponse } from './dto/relatorio.dto';
+import { FechamentoCaixaFilters, FechamentoCaixaResponse } from './dto/relatorio-fechamento-caixa.dto';
 
 @Injectable()
 export class VendaService {
@@ -49,36 +49,39 @@ export class VendaService {
     return result;
   }
 
-  async gerarRelatorio(filters: RelatorioFilters): Promise<RelatorioResponse> {
+  async gerarRelatorioFechamentoCaixa(filtros: FechamentoCaixaFilters): Promise<FechamentoCaixaResponse> {
     const where: any = {};
 
-    if (filters?.periodo?.startDate || filters?.periodo?.endDate) {
-      const createdAt: any = {};
+    if (filtros?.periodo?.dataInicial || filtros?.periodo?.dataFinal) {
+      const createdAt: {
+        gte?: Date;
+        lte?: Date;
+      } = {};
 
-      if (filters.periodo.startDate) {
-        const start = new Date(`${filters.periodo.startDate}T00:00:00.000`);
+      if (filtros.periodo.dataInicial) {
+        const start = new Date(`${filtros.periodo.dataInicial}T00:00:00.000`);
         createdAt.gte = start;
       }
 
-      if (filters.periodo.endDate) {
-        const end = new Date(`${filters.periodo.endDate}T23:59:59.999`);
+      if (filtros.periodo.dataFinal) {
+        const end = new Date(`${filtros.periodo.dataFinal}T23:59:59.999`);
         createdAt.lte = end;
       }
 
       where.createdAt = createdAt;
     }
 
-    if (filters?.formasPagamento && filters.formasPagamento.length > 0) {
-      where.formaPagamentoId = { in: filters.formasPagamento };
+    if (filtros?.formasPagamento && filtros.formasPagamento.length > 0) {
+      where.formaPagamentoId = { in: filtros.formasPagamento };
     }
 
-    if (filters?.produtos && filters.produtos.length > 0) {
-      where.produtos = { some: { produtoId: { in: filters.produtos } } };
+    if (filtros?.produtos && filtros.produtos.length > 0) {
+      where.produtos = { some: { produtoId: { in: filtros.produtos } } };
     }
 
-    if (filters?.categorias && filters.categorias.length > 0) {
+    if (filtros?.categorias && filtros.categorias.length > 0) {
       where.produtos = Object.assign(where.produtos || {}, {
-        some: { produto: { categoriaId: { in: filters.categorias } } },
+        some: { produto: { categoriaId: { in: filtros.categorias } } },
       });
     }
 
@@ -91,41 +94,36 @@ export class VendaService {
       orderBy: { createdAt: 'desc' },
     });
 
+    const formaPagamentoCounts: Record<string, { nome: string; quantidade: number }> = {};
     const produtoCounts: Record<string, { nome: string; quantidade: number }> = {};
-    const pagamentoCounts: Record<string, { nome: string; count: number }> = {};
 
-    for (const v of vendas) {
-      if (v.formaPagamento) {
-        const id = String(v.formaPagamento.id);
-        const nomeForma = (v.formaPagamento as any).name || (v.formaPagamento as any).nome || '—';
-        pagamentoCounts[id] = pagamentoCounts[id] || { nome: nomeForma, count: 0 };
-        pagamentoCounts[id].count += 1;
+    for (const venda of vendas) {
+      if (venda.formaPagamento) {
+        const fpId = venda.formaPagamento.id;
+        formaPagamentoCounts[fpId] = formaPagamentoCounts[fpId] || { nome: venda.formaPagamento.name || '—', count: 0 };
+        formaPagamentoCounts[fpId].quantidade += 1;
       }
 
-      if (v.produtos) {
-        for (const p of v.produtos) {
-          const pid = String(p.produtoId);
-          const produtoNome = (p.produto as any)?.descricao || (p.produto as any)?.nome || '—';
-          produtoCounts[pid] = produtoCounts[pid] || { nome: produtoNome, quantidade: 0 };
-          produtoCounts[pid].quantidade += p.quantidade || 0;
+      if (venda.produtos) {
+        for (const produto of venda.produtos) {
+          const pId = produto.id;
+          produtoCounts[pId] = produtoCounts[pId] || { nome: produto.produto?.descricao || '—', quantidade: 0 };
+          produtoCounts[pId].quantidade += produto.quantidade || 0;
         }
       }
     }
 
-    const mostSold = Object.entries(produtoCounts).sort((a, b) => b[1].quantidade - a[1].quantidade)[0];
-    const mostUsedPayment = Object.entries(pagamentoCounts).sort((a, b) => b[1].count - a[1].count)[0];
-    const netTotal = vendas.reduce((sum, venda) => sum + (Number(venda.valorLiquido) || 0), 0);
-    const grossTotal = vendas.reduce((sum, venda) => sum + (Number(venda.valorTotalVenda) || 0), 0);
-    const discounts = vendas.reduce((sum, venda) => sum + (Number(venda.valorTotalDesconto) || 0), 0);
+    const formaPagamentoMaisUsada = Object.entries(formaPagamentoCounts).sort((a, b) => b[1].quantidade - a[1].quantidade)[0];
+    const produtoMaisVendido = Object.entries(produtoCounts).sort((a, b) => b[1].quantidade - a[1].quantidade)[0];
 
     return {
       vendas: vendas,
-      summary: {
-        netTotal,
-        grossTotal,
-        discounts,
-        mostSold: mostSold ? { id: mostSold[0], nome: mostSold[1].nome, quantidade: mostSold[1].quantidade } : null,
-        mostUsedPayment: mostUsedPayment ? { id: mostUsedPayment[0], nome: mostUsedPayment[1].nome, count: mostUsedPayment[1].count } : null,
+      sumario: {
+        totalLiquido: vendas.reduce((sum, venda) => sum + (Number(venda.valorLiquido) || 0), 0),
+        totalBruto: vendas.reduce((sum, venda) => sum + (Number(venda.valorTotalVenda) || 0), 0),
+        descontos: vendas.reduce((sum, venda) => sum + (Number(venda.valorTotalDesconto) || 0), 0),
+        produtoMaisVendido: produtoMaisVendido ? { id: produtoMaisVendido[0], nome: produtoMaisVendido[1].nome, quantidade: produtoMaisVendido[1].quantidade } : null,
+        formaPagamentoMaisUsada: formaPagamentoMaisUsada ? { id: formaPagamentoMaisUsada[0], nome: formaPagamentoMaisUsada[1].nome, quantidade: formaPagamentoMaisUsada[1].quantidade } : null,
       },
     };
   }

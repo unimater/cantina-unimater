@@ -14,16 +14,16 @@ export default function RelatorioFechamento() {
   const filters = useLocation().state?.filters || {};
 
   const [vendas, setVendas] = React.useState<any[]>([]);
-  const [summary, setSummary] = React.useState<any>(null);
+  const [sumario, setSumario] = React.useState<any>(null);
 
   const mutation = useMutation({
     mutationFn: async (filters) => {
-      const response = await api.post('/venda/relatorio', filters);
+      const response = await api.post('/venda/fechamento-caixa', filters);
       return response.data;
     },
     onSuccess: (data) => {
       setVendas(data.vendas || []);
-      setSummary(data.summary || null);
+      setSumario(data.sumario || null);
     },
     onError: () => {
       toast.error('Erro ao carregar relatório.');
@@ -51,7 +51,7 @@ export default function RelatorioFechamento() {
       const marginLeft = 40;
       const marginRight = 40;
       const pageWidth = typeof doc.internal.pageSize.getWidth === 'function' ? doc.internal.pageSize.getWidth() : (doc.internal.pageSize.width || 595.28);
-      doc.text(`Período: ${formatDateBR(filters?.periodo?.startDate)} até ${formatDateBR(filters?.periodo?.endDate)}`,  marginLeft, summaryY);
+      doc.text(`Período: ${formatDateBR(filters?.periodo?.dataInicial)} até ${formatDateBR(filters?.periodo?.dataFinal)}`,  marginLeft, summaryY);
 
       const availableWidth = pageWidth - marginLeft - marginRight;
       const colWidth = availableWidth / 3;
@@ -62,9 +62,9 @@ export default function RelatorioFechamento() {
       doc.text('Valor Total de Descontos', marginLeft + colWidth * 2, colY);
 
       const valueY = colY + 14;
-      doc.text(`R$ ${summary ? Number(summary.grossTotal).toFixed(2) : '0.00'}`, marginLeft, valueY);
-      doc.text(`R$ ${summary ? Number(summary.netTotal).toFixed(2) : '0.00'}`, marginLeft + colWidth, valueY);
-      doc.text(`R$ ${summary ? Number(summary.discounts).toFixed(2) : '0.00'}`, marginLeft + colWidth * 2, valueY);
+      doc.text(`R$ ${sumario ? Number(sumario.totalBruto).toFixed(2) : '0.00'}`, marginLeft, valueY);
+      doc.text(`R$ ${sumario ? Number(sumario.totalLiquido).toFixed(2) : '0.00'}`, marginLeft + colWidth, valueY);
+      doc.text(`R$ ${sumario ? Number(sumario.descontos).toFixed(2) : '0.00'}`, marginLeft + colWidth * 2, valueY);
 
       const columns = ['Data', 'Produtos', 'Quantidade', 'Valor', 'Desconto', 'Pagamento'];
       const rows: any[] = (vendas || []).map((v: any) => {
@@ -148,23 +148,23 @@ export default function RelatorioFechamento() {
             <CardContent>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                 <div className='flex gap-4 '>
-                    <strong>Valor Total Bruto: </strong><span>{summary ? `R$ ${Number(summary.grossTotal).toFixed(2)}` : '-'}</span>
+                    <strong>Valor Total Bruto: </strong><span>{sumario ? `R$ ${Number(sumario.totalBruto).toFixed(2)}` : '-'}</span>
                 </div>
 
                 <div className='flex gap-4 '>
-                    <strong>Valor Total Líquido: </strong><span>{summary ? `R$ ${Number(summary.netTotal).toFixed(2)}` : '-'}</span>
+                    <strong>Valor Total Líquido: </strong><span>{sumario ? `R$ ${Number(sumario.totalLiquido).toFixed(2)}` : '-'}</span>
                 </div>
 
                 <div className='flex gap-4 '>
-                    <strong>Valor Total de Descontos: </strong><span>{summary ? `R$ ${Number(summary.discounts).toFixed(2)}` : '-'}</span>
+                    <strong>Valor Total de Descontos: </strong><span>{sumario ? `R$ ${Number(sumario.descontos).toFixed(2)}` : '-'}</span>
                 </div>
 
                 <div className='flex gap-4 '>
-                    <strong>Produto Mais Vendido: </strong><span>{summary?.mostSold?.nome || '-'}</span>
+                    <strong>Produto Mais Vendido: </strong><span>{sumario?.produtoMaisVendido?.nome || '-'}</span>
                 </div>
 
                 <div className='flex gap-4 '>
-                    <strong>Pagamento Mais Usado: </strong><span>{summary?.mostUsedPayment?.nome || '-'}</span>
+                    <strong>Pagamento Mais Usado: </strong><span>{sumario?.formaPagamentoMaisUsada?.nome || '-'}</span>
                 </div>
               </div>
             </CardContent>

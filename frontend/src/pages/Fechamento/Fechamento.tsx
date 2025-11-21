@@ -10,9 +10,9 @@ import { useQuery } from '@tanstack/react-query';
 export default function Fechamento() {
   const navigate = useNavigate();
 
-  const [startDate, setStartDate] = React.useState<string>('');
-  const [endDate, setEndDate] = React.useState<string>('');
-  const [formaSelecionada, setFormaSelecionada] = React.useState<string>('');
+  const [dataInicial, setDataInicial] = React.useState<string>('');
+  const [dataFinal, setDataFinal] = React.useState<string>('');
+  const [formaPagamentoSelecionada, setFormaPagamentoSelecionada] = React.useState<string>('');
   const [produtoSelecionado, setProdutoSelecionado] = React.useState<string>('');
   const [categoriaSelecionada, setCategoriaSelecionada] = React.useState<string>('');
 
@@ -42,8 +42,8 @@ export default function Fechamento() {
 
   function handleGerar() {
     const filters = {
-      periodo: { startDate, endDate },
-      formasPagamento: formaSelecionada ? [formaSelecionada] : [],
+      periodo: { dataInicial, dataFinal },
+      formasPagamento: formaPagamentoSelecionada ? [formaPagamentoSelecionada] : [],
       produtos: produtoSelecionado ? [produtoSelecionado] : [],
       categorias: categoriaSelecionada ? [categoriaSelecionada] : [],
     };
@@ -60,17 +60,17 @@ export default function Fechamento() {
         <CardContent className='grid grid-cols-1 gap-4 md:grid-cols-3'>
             <div>
                 <label className='block text-sm font-medium text-gray-700'>Início</label>
-                <Input type='date' value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <Input type='date' value={dataInicial} onChange={(e) => setDataInicial(e.target.value)} />
             </div>
 
             <div>
                 <label className='block text-sm font-medium text-gray-700'>Fim</label>
-                <Input type='date' value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                <Input type='date' value={dataFinal} onChange={(e) => setDataFinal(e.target.value)} />
             </div>
 
             <div>
                 <label className='block text-sm font-medium text-gray-700'>Forma de Pagamento</label>
-                <Select onValueChange={(v) => setFormaSelecionada(v)}>
+                <Select onValueChange={(v) => setFormaPagamentoSelecionada(v)}>
                     <SelectTrigger>
                       <SelectValue placeholder='Selecione' />
                     </SelectTrigger>

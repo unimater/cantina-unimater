@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, HttpCode } from '@nestjs/common';
 import {  VendaService } from './venda.service';
-import { Produto, Venda } from 'generated/prisma';
+import { Venda } from 'generated/prisma';
 import { ProdutoMaisVendido } from './dto/produto-mais-vendido.dto';
-import { RelatorioFilters } from './dto/relatorio.dto';
+import { FechamentoCaixaFilters, FechamentoCaixaResponse } from './dto/relatorio-fechamento-caixa.dto';
 
 @Controller('venda')
 export class VendaController {
@@ -20,9 +20,9 @@ export class VendaController {
     return this.vendaService.findProdutosMaisVendidos()
   }
 
-  @Post('/relatorio')
+  @Post('/fechamento-caixa')
   @HttpCode(200)
-  gerarRelatorio(@Body() filters: RelatorioFilters): Promise<any> {
-    return this.vendaService.gerarRelatorio(filters);
+  gerarRelatorioFechamentoCaixa(@Body() filters: FechamentoCaixaFilters): Promise<FechamentoCaixaResponse> {
+    return this.vendaService.gerarRelatorioFechamentoCaixa(filters);
   }
 }
