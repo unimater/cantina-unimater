@@ -24,7 +24,10 @@ const ListarProdutos: React.FC = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ['getProdutos'],
-    queryFn: () => api.get("/produtos")
+    queryFn: async () => {
+      const response = await api.get('http://localhost:3000/produtos');
+      return response.data as Produto[];
+    },
   })
 
   const deleteMutation = useMutation({
@@ -35,7 +38,7 @@ const ListarProdutos: React.FC = () => {
   });
 
   useEffect(() => {
-  const produtosApi = data?.data;
+  const produtosApi = data;
 
   if (Array.isArray(produtosApi)) {
     setProdutos(produtosApi);
