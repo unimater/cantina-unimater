@@ -6,7 +6,10 @@ import { MovimentacaoEstoqueService } from 'src/movimentacao-estoque/movimentaca
 
 @Injectable()
 export class PdvService {
-  constructor(private prismaService: PrismaService, private movimentacaoEstoqueService: MovimentacaoEstoqueService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private movimentacaoEstoqueService: MovimentacaoEstoqueService,
+  ) {}
 
   async concluirVendaPdv(concluirVendaPdvDto: ConcluirVendaPdvDTO) {
     const { produtos, usuarioId } = concluirVendaPdvDto;
@@ -14,7 +17,8 @@ export class PdvService {
     this.validarVenda(concluirVendaPdvDto);
 
     const valorLiquidoVenda =
-      concluirVendaPdvDto.valorTotalVenda - concluirVendaPdvDto.valorTotalDesconto;
+      concluirVendaPdvDto.valorTotalVenda -
+      concluirVendaPdvDto.valorTotalDesconto;
 
     const venda = await this.prismaService.venda.create({
       data: {
@@ -41,6 +45,22 @@ export class PdvService {
 
     await this.baixarEstoque(produtos, usuarioId);
 
+       await this.prismaService.pedido.create({
+      data: {
+        descricao: `Pedido gerado pelo PDV - Venda ${venda.id}`,
+        total: valorLiquidoVenda,
+        itens: {
+          create: produtos.map((p: ProdutoVendaDTO) => ({
+            produtoId: p.produtoId,
+            quantidade: p.quantidade,
+            precoUnitario: (p as any).valorUnitario ?? 0,
+            subtotal: ((p as any).valorUnitario ?? 0) * p.quantidade,
+          })),
+        },
+      },
+    });
+
+
     return {
       message: 'Sucesso! A venda foi concluída com sucesso.',
       venda,
@@ -48,20 +68,30 @@ export class PdvService {
   }
 
   private validarVenda(concluirVendaPdvDto: ConcluirVendaPdvDTO) {
-    if (concluirVendaPdvDto.produtos.length === 0) throw new HttpException('Nenhum produto selecionado para venda.', 400);
-    if (!concluirVendaPdvDto.formaPagamentoId) throw new HttpException('Nenhuma forma de pagamento foi informada.', 400);
+    if (concluirVendaPdvDto.produtos.length === 0)
+      throw new HttpException(
+        'Nenhum produto selecionado para venda.',
+        400,
+      );
+    if (!concluirVendaPdvDto.formaPagamentoId)
+      throw new HttpException(
+        'Nenhuma forma de pagamento foi informada.',
+        400,
+      );
   }
-  
-  private async baixarEstoque(produtosVenda: ProdutoVendaDTO[], usuarioId: string) {
+
+  private async baixarEstoque(
+    produtosVenda: ProdutoVendaDTO[],
+    usuarioId: string,
+  ) {
     for (const produto of produtosVenda) {
-      const baixarPdv = { 
-        produtoId: produto.produtoId, 
-        quantidade: produto.quantidade, 
-        usuarioId 
+      const baixarPdv = {
+        produtoId: produto.produtoId,
+        quantidade: produto.quantidade,
+        usuarioId,
       };
 
       await this.movimentacaoEstoqueService.baixarEstoque(baixarPdv);
     }
   }
-  
 }
