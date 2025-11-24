@@ -35,10 +35,14 @@ const ListarProdutos: React.FC = () => {
   });
 
   useEffect(() => {
-    if (data?.data) {
-      setProdutos(data?.data)
-    }
-  }, [data])
+  const produtosApi = data?.data;
+
+  if (Array.isArray(produtosApi)) {
+    setProdutos(produtosApi);
+  } else {
+    setProdutos([]);
+  }
+}, [data]);
   
   const filtrados = useMemo(
     () =>
