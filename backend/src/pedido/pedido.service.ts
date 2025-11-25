@@ -52,7 +52,7 @@ export class PedidoService {
   async findAll(query: FindAllPedidosDto) {
     const { page = 1, limit = 10, status, formaPagamentoId, dataInicial, dataFinal } = query;
 
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * Number(limit);
 
     const where: Record<string, any> = {};
 
@@ -75,7 +75,7 @@ export class PedidoService {
       this.prisma.pedido.findMany({
         where,
         skip,
-        take: limit,
+        take: Number(limit),
         orderBy: { dataPedido: 'desc' },
         include: {
           formaPagamento: true,
