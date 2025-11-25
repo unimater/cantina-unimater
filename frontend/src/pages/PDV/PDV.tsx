@@ -11,12 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Plus, Minus } from 'lucide-react';
-import type { ConcluirVendaPDV } from '@/type/PDV';
 import api from '@/api/api';
-import type { Produto } from '@/type/Produto';
+import { authUtils } from '@/lib/auth';
 
-const PaymentMethods = ['Dinheiro', 'Cartão', 'PIX'] as const;
-type PaymentMethod = (typeof PaymentMethods)[number];
+// const PaymentMethods = ['Dinheiro', 'Cartão', 'PIX'] as const;
+// type PaymentMethod = (typeof PaymentMethods)[number];
 
 const currency = (v: number) => `R$ ${v.toFixed(2).replace('.', ',')}`;
 
@@ -24,37 +23,82 @@ interface Product {
   id: string;
   descricao: string;
   valor: number;
-  quantidadeEstoque: number;
   situacao: boolean;
   categoriaId: string;
+}
+
+interface FormaPagamento {
+  id: string;
+  name: string;
+  status: boolean;
+}
+
+interface ProdutoVenda {
+  produtoId: string;
+  quantidade: number;
+  valorUnitario: number;
+}
+
+interface ConcluirVendaPDV {
+  produtos: ProdutoVenda[];
+  valorTotalVenda: number;
+  valorTotalDesconto: number;
+  formaPagamentoId: string;
+  usuarioId: string;
 }
 
 const PDV: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState('');
   const [cart, setCart] = useState<Record<string, number>>({});
-  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentMethods, setPaymentMethods] = useState<FormaPagamento[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [notif, setNotif] = useState<string | null>(null);
 
   useEffect(() => {
-  const load = async () => {
-    try {
-      const { data } = await api.get("http://localhost:3000/produtos");
+    const load = async () => {
+      try {
+        const { data: productsData } = await api.get('http://localhost:3000/produtos');
 
-      const mapped: Product[] = data.map((p: any) => ({
-        ...p,
-        valor: Number(p.valor),
-        quantidadeEstoque: Number(p.quantidadeEstoque),
-      }));
+        console.log('productsData', productsData);
 
-      setProducts(mapped);
-    } catch (e) {
-      notify("Erro ao carregar produtos");
-    }
-  };
+        const mapped: Product[] = productsData.map((p: any) => ({
+          id: String(p.id),
+          descricao: p.descricao || p.nome || p.titulo,
+          valor: Number(p.valor ?? p.preco ?? 0),
+          situacao: Boolean(p.situacao ?? p.status),
+          categoriaId: String(p.categoriaId ?? p.categoria_id),
+        }));
 
-  load();
-}, []);
+        setProducts(mapped);
+      } catch (e) {
+        notify('Erro ao carregar produtos');
+      }
+    };
+
+    load();
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data: paymentsMethodsData } = await api.get(
+          'http://localhost:3000/formas-pagamento'
+        );
+
+        const mapped: FormaPagamento[] = paymentsMethodsData.map((p: any) => ({
+          ...p,
+          status: Boolean(p.status),
+        }));
+
+        setPaymentMethods(mapped);
+      } catch (e) {
+        notify('Erro ao carregar produtos');
+      }
+    };
+
+    load();
+  }, []);
 
   const notify = (msg: string) => {
     setNotif(msg);
@@ -99,7 +143,7 @@ const PDV: React.FC = () => {
     notify('Produto adicionado');
   };
 
-  const remove = (product: Produto) => {
+  const remove = (product: Product) => {
     const id = String(product.id);
     const current = cart[id] ?? 0;
     if (current <= 1) {
@@ -116,6 +160,8 @@ const PDV: React.FC = () => {
   // ✅ Checkout refatorado
   // -----------------------------
   const handleCheckout = async () => {
+    const user = authUtils.getUser();
+
     const payload: ConcluirVendaPDV = {
       produtos: cartItems.map(it => ({
         produtoId: String(it.productId),
@@ -125,7 +171,7 @@ const PDV: React.FC = () => {
       valorTotalVenda: totals.totalPrice,
       valorTotalDesconto: 0,
       formaPagamentoId: paymentMethod,
-      usuarioId: '1',
+      usuarioId: user ? String(user.id) : '',
     };
 
     try {
@@ -134,7 +180,7 @@ const PDV: React.FC = () => {
       );
       if (!confirmed) return;
 
-      await api.post('http://localhost:3000/vendas', payload);
+      await api.post('http://localhost:3000/pdv', payload);
 
       notify('Venda finalizada!');
       clearCart();
@@ -229,27 +275,25 @@ const PDV: React.FC = () => {
                 <span className='font-medium'>{currency(totals.totalPrice)}</span>
               </div>
 
-              <div>
-                <div className='mb-2 text-sm'>Forma de pagamento</div>
-                <Select
-                  onValueChange={v => setPaymentMethod(v as PaymentMethod)}
-                  defaultValue={paymentMethod}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Selecionar' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PaymentMethods.map(m => (
-                      <SelectItem
-                        key={m}
-                        value={m}
-                      >
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select
+                onValueChange={v => setPaymentMethod(v)}
+                value={paymentMethod}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Selecionar' />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {paymentMethods.map(m => (
+                    <SelectItem
+                      key={m.id}
+                      value={m.id}
+                    >
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
               <div>
                 <div className='mb-2 text-sm'>Itens no carrinho</div>
