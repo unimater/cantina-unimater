@@ -12,7 +12,7 @@ import { hash } from 'bcrypt';
 export class UsersService {
   constructor(private prismaService: PrismaService) {}
 
-  async create(userDto: UserDto) {
+  async create(userDto: UserDto, user: string) {
     const validatedData = this.validateUserDto(userDto);
 
     const usernameExists = await this.prismaService.user.findFirst({

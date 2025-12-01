@@ -12,6 +12,10 @@ import { ProdutosModule } from './produtos/produtos.module';
 import { UsersModule } from './users/users.module';
 import { AuthController } from './auth/auth.controller';
 import { EmailModule } from './emails/email.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { MovimentacaoEstoqueModule } from './movimentacao-estoque/movimentacao-estoque.module';
+import { PdvModule } from './pdv/pdv.module';
+import { VendaModule } from './vendas/venda.module';
 
 @Module({
   imports: [
@@ -26,7 +30,11 @@ import { EmailModule } from './emails/email.module';
     DespesasModule,
     CategoriasModule,
     ProdutosModule,
-    EmailModule
+    EmailModule,
+    DashboardModule,
+    MovimentacaoEstoqueModule,
+    PdvModule,
+    VendaModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, PrismaService],

@@ -1,78 +1,164 @@
 generator client {
-    provider = "prisma-client-js"
-    output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Produto {
-    id          String    @id @default(cuid())
-    descricao   String
-    valor       Decimal
-    situacao    Boolean
-    imagem      String?
-
-    categoria   Categoria @relation(fields: [categoriaId], references: [id])  
-    categoriaId String    @map("categoria_id") 
-    
-    createdAt   DateTime  @default(now()) @map("created_at")
-    updatedAt   DateTime? @updatedAt @map("updated_at")
+  id                  String                @id @default(cuid())
+  descricao           String
+  valor               Decimal
+  situacao            Boolean
+  imagem              String?
+  categoriaId         String                @map("categoria_id")
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime?             @updatedAt @map("updated_at")
+  estoqueMinimo       Decimal               @default(0)
+  quantidadeEstoque   Decimal               @default(0)
+  createdBy           String                @map("created_by")
+  estoque             Estoque?
+  itensVenda          ItemVenda[]
+  movimentacaoEstoque MovimentacaoEstoque[]
+  categoria           Categoria             @relation(fields: [categoriaId], references: [id])
+  user                User                  @relation(fields: [createdBy], references: [id])
+  vendaProduto        VendaProduto[]
 }
 
 model Categoria {
-    id        String        @id @default(cuid())
-    descricao String
-    tipo      TipoCategoria
-    situacao  Boolean
-
-    produtos  Produto[]
-
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
-}
-
-enum TipoCategoria {
-    PRODUTO
-    DESPESA
+  id        String        @id @default(cuid())
+  descricao String
+  tipo      TipoCategoria
+  situacao  Boolean
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime?     @updatedAt @map("updated_at")
+  createdBy String        @map("created_by")
+  user      User          @relation(fields: [createdBy], references: [id])
+  produtos  Produto[]
 }
 
 model Despesa {
-  id             String     @id @default(cuid())
-  descricao      String     @unique                                                     
-  data           DateTime                                    
-  valor          Decimal               
-  fornecedor     String?                   
-  observacoes    String?       
-
-  createdAt DateTime  @default(now()) @map("created_at")       
-  updatedAt DateTime? @updatedAt      @map("updated_at")                                  
+  id          String    @id @default(cuid())
+  descricao   String    @unique
+  data        DateTime
+  valor       Decimal
+  fornecedor  String?
+  observacoes String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt @map("updated_at")
+  createdBy   String    @map("created_by")
+  user        User      @relation(fields: [createdBy], references: [id])
 }
 
 model User {
-  id           String       @id @default(cuid())
-  cpf          String       @unique @db.VarChar(20)
-  name         String       @db.VarChar(200)
-  username     String       @unique @db.VarChar(100) 
-  password     String       @db.VarChar(200)
-  email        String?      @db.VarChar(200)
-  phone        String?      @db.VarChar(20)
-  active       Boolean      @default(true)
-
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime?    @updatedAt
-
-  resetToken       String?     
-  resetTokenExpiry DateTime?   
+  id                  String                @id @default(cuid())
+  cpf                 String                @unique @db.VarChar(20)
+  name                String                @db.VarChar(200)
+  username            String                @unique @db.VarChar(100)
+  password            String                @db.VarChar(200)
+  email               String?               @db.VarChar(200)
+  phone               String?               @db.VarChar(20)
+  active              Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime?             @updatedAt
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  categorias          Categoria[]
+  despesas            Despesa[]
+  movimentacaoEstoque MovimentacaoEstoque[]
+  produtos            Produto[]
+  venda               Venda[]
+  formasPagamento     formasPagamento[]
 }
 
 model formasPagamento {
-  id           String       @id @default(cuid())
-  name         String
-  status       Boolean      @default(true)
+  id        String    @id @default(cuid())
+  name      String
+  status    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  createdBy String    @map("created_by")
+  venda     Venda[]
+  user      User      @relation(fields: [createdBy], references: [id])
+}
 
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime?    @updatedAt
+model Venda {
+  id                 String          @id @default(cuid())
+  valorTotalVenda    Decimal         @map("valor_total_venda")
+  valorTotalDesconto Decimal         @map("valor_total_desconto")
+  valorLiquido       Decimal         @map("valor_liquido")
+  usuarioId          String
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime?       @updatedAt @map("updated_at")
+  data               DateTime        @default(now())
+  formaPagamentoId   String          @map("forma_pagamento_id")
+  observacoes        String?
+  valorTotal         Decimal
+  itens              ItemVenda[]
+  formaPagamento     formasPagamento @relation(fields: [formaPagamentoId], references: [id])
+  usuario            User            @relation(fields: [usuarioId], references: [id])
+  produtos           VendaProduto[]
+}
+
+model VendaProduto {
+  id         String    @id @default(cuid())
+  produtoId  String
+  vendaId    String
+  quantidade Int
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+  produto    Produto   @relation(fields: [produtoId], references: [id])
+  venda      Venda     @relation(fields: [vendaId], references: [id])
+}
+
+model ItemVenda {
+  id            String    @id @default(cuid())
+  quantidade    Int
+  valorUnitario Decimal
+  valorTotal    Decimal
+  vendaId       String    @map("venda_id")
+  produtoId     String    @map("produto_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime? @updatedAt @map("updated_at")
+  produto       Produto   @relation(fields: [produtoId], references: [id])
+  venda         Venda     @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+}
+
+model MovimentacaoEstoque {
+  id              String           @id @default(cuid())
+  produtoId       String           @map("produtoId")
+  usuarioId       String           @map("usuarioId")
+  tipo            TipoMovimentacao
+  motivo          String           @db.VarChar(255)
+  quantidade      Decimal          @db.Decimal(15, 2)
+  estoqueAnterior Decimal          @db.Decimal(15, 2)
+  estoqueAtual    Decimal          @db.Decimal(15, 2)
+  observacoes     String?          @db.VarChar(255)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime?        @updatedAt
+  produto         Produto          @relation(fields: [produtoId], references: [id])
+  usuario         User             @relation(fields: [usuarioId], references: [id])
+}
+
+model Estoque {
+  id            String    @id @default(cuid())
+  quantidade    Int
+  quantidadeMin Int       @default(5) @map("quantidade_min")
+  produtoId     String    @unique @map("produto_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime? @updatedAt @map("updated_at")
+  produto       Produto   @relation(fields: [produtoId], references: [id])
+}
+
+enum TipoCategoria {
+  PRODUTO
+  DESPESA
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
 }

@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 import { categoriaSchema } from '@/lib/CategoriaSchema';
 import type { Categoria } from '@/type/Categoria';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/api/api';
 
 type FormValues = z.infer<typeof categoriaSchema>;
 
@@ -45,7 +45,7 @@ const EditarCategoria: React.FC<EditarCategoriaProps> = ({
 
   const updateMutation = useMutation({
     mutationFn: async (categoriaAtualizada: Categoria) => {
-      const response = await axios.patch(
+      const response = await api.patch(
         `http://localhost:3000/categorias/${categoria.id}`,
         categoriaAtualizada
       );
