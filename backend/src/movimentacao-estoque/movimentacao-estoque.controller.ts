@@ -1,14 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
 import { MovimentacaoEstoqueService } from './movimentacao-estoque.service';
 import { CreateMovimentacaoEstoqueDto } from './dto/create-movimentacao-estoque.dto';
+import { CurrentUser } from 'src/auth/current-user-decorator';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import type { UserAuthPayload } from 'src/auth/jwt.strategy';
 
+
+@UseGuards(JwtAuthGuard)
 @Controller('estoque')
 export class MovimentacaoEstoqueController {
   constructor(private readonly movimentacaoEstoqueService: MovimentacaoEstoqueService) {}
 
   @Post('/movimentacao')
-  registrarMovimentacao (@Body() createMovimentacaoEstoqueDto: CreateMovimentacaoEstoqueDto) {
-    return this.movimentacaoEstoqueService.registrarMovimentacao(createMovimentacaoEstoqueDto)
+  registrarMovimentacao (@Body() createMovimentacaoEstoqueDto: CreateMovimentacaoEstoqueDto,
+    @CurrentUser() user: UserAuthPayload) {
+    return this.movimentacaoEstoqueService.registrarMovimentacao(createMovimentacaoEstoqueDto, user.sub)
   }
 
   @Get('/movimentacoes') 
@@ -31,13 +37,6 @@ export class MovimentacaoEstoqueController {
   @Get()
   listarEstoque () {
     return this.movimentacaoEstoqueService.listarEstoque()
-  }
-
-  @Post()
-  baixarEstoque(
-    @Body() bodyBaixaPdv: {produtoId: string, quantidade: number, usuarioId: string}
-  ) {
-    return this.movimentacaoEstoqueService.baixarEstoque(bodyBaixaPdv)
   }
 
   @Get('/baixo')

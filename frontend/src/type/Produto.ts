@@ -9,4 +9,6 @@ export interface Produto {
   categoria: Categoria;
   createdAt: string;
   updatedAt?: string
+  estoqueMinimo?: number;
+  quantidadeEstoque?: number;
 }

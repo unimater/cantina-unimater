@@ -3,5 +3,6 @@ export class CreateProdutoDto {
   valor: number;           
   situacao: boolean;     
   imagem?: string;         
-  categoriaId: string;    
+  categoriaId: string;
+  estoqueMinimo?: number;
 }

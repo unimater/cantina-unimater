@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, CircleAlertIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import CriarProduto from './CriarProduto';
@@ -94,6 +94,8 @@ const ListarProdutos: React.FC = () => {
               <TableHead className="text-left px-3 py-2">Categoria</TableHead>
               <TableHead className="text-right px-3 py-2">Valor</TableHead>
               <TableHead className="text-left px-3 py-2">Situação</TableHead>
+              <TableHead className="text-center px-3 py-2">Estoque <br /> Mínimo</TableHead>
+              <TableHead className="text-center px-3 py-2">Quantidade <br /> em Estoque</TableHead>
               <TableHead className="text-right px-3 py-2">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -123,6 +125,19 @@ const ListarProdutos: React.FC = () => {
                       />
                       {p.situacao ? 'Ativo' : 'Inativo'}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-center px-3 py-2">{p.estoqueMinimo}</TableCell>
+                  <TableCell className="text-center px-3 py-2">
+                    {
+                      p.quantidadeEstoque! <= p.estoqueMinimo! ? (
+                        <div className="flex items-center justify-center gap-2 text-red-600 font-medium bg-red-100 px-2 py-1 rounded">
+                          {p.quantidadeEstoque}
+                          <CircleAlertIcon className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <span>{p.quantidadeEstoque}</span>
+                      )
+                    }
                   </TableCell>
                   <TableCell className="px-3 py-2 text-right">
                     <div className="flex justify-end gap-2">

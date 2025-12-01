@@ -6,10 +6,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class MovimentacaoEstoqueService {
   constructor(private prismaService: PrismaService) {}
 
-  async registrarMovimentacao(CreateMovimentacaoEstoqueDto: CreateMovimentacaoEstoqueDto) {
+  async registrarMovimentacao(CreateMovimentacaoEstoqueDto: CreateMovimentacaoEstoqueDto, usuarioId: string) {
     const { 
-      produtoId, 
-      usuarioId, 
+      produtoId,
       tipo, 
       motivo, 
       quantidade, 
@@ -19,16 +18,6 @@ export class MovimentacaoEstoqueService {
     if (!produtoId || !quantidade || !usuarioId || Number(quantidade) === 0) {
       throw new BadRequestException("Valores obrigatórios invalidos")
     }
-
-    const usuario = await this.prismaService.user.findUnique({
-      where: {
-        id: usuarioId
-      }
-    })
-
-    if (!usuario) {
-      throw new BadRequestException(`Usuário ${usuarioId} não foi encontrado`)
-    };
 
     const produto = await this.prismaService.produto.findUnique({ 
       where: {

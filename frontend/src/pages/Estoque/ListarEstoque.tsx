@@ -8,12 +8,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import CriarPagamento from './CriarEstoque.tsx';
 import type { Estoque } from '@/type/Estoque.ts';
 import { PackageCheck, PackageMinus } from 'lucide-react';
 import { ConsultarEstoque } from './ConsultarEstoque.tsx';
 import { useState } from 'react';
+import api from '@/api/api.ts';
 
 const ListarEstoque: React.FC = () => {
 
@@ -47,7 +47,7 @@ const ListarEstoque: React.FC = () => {
     }
 
 
-    const response = await axios.get(`http://localhost:3000/estoque/movimentacoes?${params.toString()}`);
+    const response = await api.get(`/estoque/movimentacoes?${params.toString()}`);
       return response.data as Estoque[];
     },
   });
@@ -73,8 +73,6 @@ const ListarEstoque: React.FC = () => {
               <TableHead>Tipo</TableHead>
               <TableHead>Produto</TableHead>
               <TableHead className='text-center'>Quantidade <br /> Movimentada</TableHead>
-              <TableHead className='text-center'>Quantidade <br /> Estoque</TableHead>
-              <TableHead className='text-center'>Quantidade <br /> Mínima</TableHead>
               <TableHead className='text-center'>Motivo</TableHead>
               <TableHead>Observações</TableHead>
               <TableHead>Usuário</TableHead>
@@ -92,8 +90,6 @@ const ListarEstoque: React.FC = () => {
                 </TableCell>
                 <TableCell>{item.produto?.descricao}</TableCell>
                 <TableCell className='text-center'>{item.quantidade}</TableCell>
-                <TableCell className='text-center'>{item.produto?.quantidadeEstoque}</TableCell>
-                <TableCell className='text-center'>{item.produto?.estoqueMinimo}</TableCell>
                 <TableCell className='text-center'>{item.motivo}</TableCell>
                 <TableCell>{item.observacoes}</TableCell>
                 <TableCell>{item.usuario?.name}</TableCell>

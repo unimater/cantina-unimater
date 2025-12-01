@@ -21,18 +21,17 @@ import type { Estoque } from '@/type/Estoque';
 import type { Produto } from '@/type/Produto';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { PackageCheck, PackageMinus } from 'lucide-react';
+import api from '@/api/api';
 
 const estoqueSchema = z.object({
   produtoId: z
     .string()
     .min(1, "Selecione um produto"),
-  usuarioId: z.string(),
   tipo: z.enum(['ENTRADA', 'SAIDA']),
   motivo: z
     .string()
@@ -55,8 +54,8 @@ const CriarEstoque = () => {
 
   const createMutation = useMutation({
     mutationFn: async (novaMovimentacaoEstoque: Omit<Estoque, 'id'>) => {
-      const response = await axios.post(
-        'http://localhost:3000/estoque/movimentacao',
+      const response = await api.post(
+        '/estoque/movimentacao',
         novaMovimentacaoEstoque
       );
       return response.data;
@@ -68,7 +67,6 @@ const CriarEstoque = () => {
       });
       form.reset({
         produtoId: '',
-        usuarioId: '',
         tipo: 'ENTRADA',
         motivo: '',
         quantidade: '',
@@ -89,7 +87,6 @@ const CriarEstoque = () => {
     resolver: zodResolver(estoqueSchema),
     defaultValues: {
       produtoId: '',
-      usuarioId: '',
       tipo: 'ENTRADA',
       motivo: '',
       quantidade: '',
@@ -100,7 +97,6 @@ const CriarEstoque = () => {
   const onSubmit = (data: FormValues) => {
     const novaMovimentacaoEstoque: Estoque = {
       produtoId: data.produtoId,
-      usuarioId: data.usuarioId,
       tipo: data.tipo,
       motivo: data.motivo,
       quantidade: data.quantidade,
@@ -113,7 +109,7 @@ const CriarEstoque = () => {
   const { data: produto } = useQuery({
     queryKey: ['getProdutos'],
     queryFn: async () => {
-      const response = await axios.get('http://localhost:3000/produtos');
+      const response = await api.get('/produtos');
       return response.data as Produto[];
     },
   });
@@ -156,26 +152,10 @@ const CriarEstoque = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {produto?.map(p => (
-                            <SelectItem key={p.id} value={p.id}>{p.descricao}</SelectItem>
+                            <SelectItem key={p.id} value={p.id!}>{p.descricao}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='usuarioId'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Usuario *</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='Usuario...'
-                        {...field}
-                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
