@@ -1,10 +1,10 @@
-import { type ReactNode } from 'react';
-import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Home, Users, LogOut, Shapes, Boxes, CreditCard, DollarSignIcon, StickyNote, PackageSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { authUtils } from '@/lib/auth';
 import { cn } from '@/lib/utils';
+import { Boxes, CreditCard, DollarSignIcon, Home, LogOut, PackageSearch, PiggyBank, Shapes, StickyNote, Users } from 'lucide-react';
+import { type ReactNode } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 interface MainLayoutProps {
   children?: ReactNode;
@@ -68,6 +68,12 @@ export function MainLayout({ children }: MainLayoutProps) {
       "href": "/estoque",
       "icon": PackageSearch,
       "current": location.pathname === '/estoque'
+    },
+    {
+      "name": "Fechamento do Caixa",
+      "href": "/fechamento",
+      "icon": PiggyBank,
+      "current": location.pathname === '/fechamento'
     },
   ];
 

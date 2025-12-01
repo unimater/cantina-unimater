@@ -24,14 +24,14 @@ export function Login() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const response = await api.post('http://localhost:3000/sessions', { username, password });
+      const response = await api.post('/sessions', { username, password });
       return response.data;
     },
     onSuccess: (data) => {
       authUtils.setUser({
         id: data.id,
-        nome: data.nome,
-        usuario: username,
+        name: data.nome,
+        username: username,
         token: data.access_token
       });
 

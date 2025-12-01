@@ -22,9 +22,12 @@ const ListarProdutos: React.FC = () => {
   const [filtro, setFiltro] = useState('');
   const [produtos, setProdutos] = useState<Produto[]>([]);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<Produto[]>({
     queryKey: ['getProdutos'],
-    queryFn: () => api.get("/produtos")
+    queryFn: async () => {
+      const response = await api.get("/produtos");
+      return response.data as Produto[];
+    },
   })
 
   const deleteMutation = useMutation({
@@ -35,9 +38,7 @@ const ListarProdutos: React.FC = () => {
   });
 
   useEffect(() => {
-    if (data?.data) {
-      setProdutos(data?.data)
-    }
+      setProdutos(data || []);
   }, [data])
   
   const filtrados = useMemo(
