@@ -32,14 +32,21 @@ const ListarProdutos: React.FC = () => {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/produtos/${id}`),
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Erro ao tentar excluir o produto.');
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || 'Erro ao tentar excluir o produto.');
     },
   });
 
   useEffect(() => {
-      setProdutos(data || []);
-  }, [data])
+  const produtosApi = data;
+
+  if (Array.isArray(produtosApi)) {
+    setProdutos(produtosApi);
+  } else {
+    setProdutos([]);
+  }
+}, [data]);
   
   const filtrados = useMemo(
     () =>

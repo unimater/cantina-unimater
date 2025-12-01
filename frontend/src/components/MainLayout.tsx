@@ -2,7 +2,19 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { authUtils } from '@/lib/auth';
 import { cn } from '@/lib/utils';
-import { Boxes, CreditCard, DollarSignIcon, Home, LogOut, PackageSearch, PiggyBank, Shapes, StickyNote, Users } from 'lucide-react';
+import {
+  Boxes,
+  CreditCard,
+  DollarSignIcon,
+  Home,
+  LogOut,
+  PackageSearch,
+  PiggyBank,
+  Scroll,
+  Shapes,
+  StickyNote,
+  Users,
+} from 'lucide-react';
 import { type ReactNode } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
@@ -64,10 +76,16 @@ export function MainLayout({ children }: MainLayoutProps) {
       current: location.pathname ==='/pedido',
     },
     {
-      "name": "Estoque",
-      "href": "/estoque",
-      "icon": PackageSearch,
-      "current": location.pathname === '/estoque'
+      name: 'Estoque',
+      href: '/estoque',
+      icon: PackageSearch,
+      current: location.pathname === '/estoque',
+    },
+    {
+      name: 'PDV',
+      href: '/pdv',
+      icon: Scroll,
+      current: location.pathname === '/pdv',
     },
     {
       "name": "Fechamento do Caixa",
@@ -142,7 +160,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Main Content */}
       <div className='flex flex-1 flex-col overflow-hidden'>
         {/* Top bar */}
-        <header className='border-b bg-white shadow-sm'>
+        <header className='h-16 border-b bg-white shadow-sm'>
           <div className='px-6 py-4'>
             <div className='flex items-center justify-between'>
               <h2 className='text-xl font-semibold text-gray-800'>

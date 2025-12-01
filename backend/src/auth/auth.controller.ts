@@ -13,6 +13,7 @@ import { compare, hash } from 'bcrypt';
 import { ZodValidationPipe } from 'src/pipes/zodValidationPipe';
 import { EmailService } from 'src/services/email.service';
 
+
 const authenticateBodySchema = z.object({
   username: z.string(),
   password: z.string(),

@@ -16,6 +16,7 @@ import { Toaster } from '@/components/ui/sonner';
 import ListarEstoque from '@/pages/Estoque/ListarEstoque';
 import Fechamento from '@/pages/Fechamento/Fechamento';
 import RelatorioFechamento from '@/pages/Fechamento/RelatorioFechamento';
+import PDV from '@/pages/PDV/PDV';
 
 function App() {
   const queryClient = new QueryClient();
@@ -94,6 +95,11 @@ function App() {
           <Route
             path='fechamento/relatorio'
             element={<RelatorioFechamento />}
+            />
+            
+          <Route
+            path='pdv'
+            element={<PDV />}
           />
         </Route>
 
