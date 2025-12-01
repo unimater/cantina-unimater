@@ -157,3 +157,4 @@ export class AuthController {
     return { message: 'Senha redefinida com sucesso.' };
   }
 }
+

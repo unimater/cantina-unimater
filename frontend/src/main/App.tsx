@@ -7,6 +7,7 @@ import { MainLayout } from '@/components/MainLayout';
 import ListarProdutos from '@/pages/Produto/ListarProduto';
 import ListarUsuarios from '@/pages/Usuario/ListarUsuario';
 import ListarDespesas from '@/pages/Despesas/ListarDespesas';
+import ListarPedido from '@/pages/Pedidos/ListarPedidos';  // ✔ CORRETO
 import FormasPagamento from '@/pages/FormasPagamento/FormasPagamento';
 import CategoriasPage from '@/app/categoria/page';
 import { EsqSenha } from '@/pages/Login/EsqSenha';
@@ -20,25 +21,31 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster />
+
       <Routes>
+
+        {/* 🔓 Rotas Públicas */}
         <Route
-          path='/login'
+          path="/login"
           element={
             <PublicRoute>
               <Login />
             </PublicRoute>
           }
         />
+
         <Route
-          path='/esq-senha'
+          path="/esq-senha"
           element={
             <PublicRoute>
               <EsqSenha />
             </PublicRoute>
           }
         />
+
+        {/* 🔐 Rotas Protegidas com Layout */}
         <Route
-          path='/'
+          path="/"
           element={
             <ProtectedRoute>
               <MainLayout />
@@ -74,16 +81,20 @@ function App() {
             path='estoque'
             element={<ListarEstoque />}
           />
+
+          <Route path="pedidos" element={<ListarPedido />} />
         </Route>
 
+        {/* Redirecionamento para login */}
         <Route
-          path='/'
+          path="/"
           element={
             <PublicRoute>
               <Login />
             </PublicRoute>
           }
         />
+        
       </Routes>
     </QueryClientProvider>
   );

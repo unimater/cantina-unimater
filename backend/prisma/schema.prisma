@@ -1,11 +1,11 @@
 generator client {
-    provider = "prisma-client-js"
-    output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Produto {
@@ -29,26 +29,27 @@ model Produto {
     updatedAt   DateTime? @updatedAt @map("updated_at")
 
     vendaProduto VendaProduto[]
+    itens        PedidoItem[]
 }
 
 model Categoria {
-    id        String        @id @default(cuid())
-    descricao String
-    tipo      TipoCategoria
-    situacao  Boolean
+  id          String        @id @default(cuid())
+  descricao   String
+  tipo        TipoCategoria
+  situacao    Boolean
 
-    produtos  Produto[]
+  produtos    Produto[]
 
-    createdBy String    @map("created_by")
-    user      User      @relation(fields: [createdBy], references: [id])
+  createdBy String    @map("created_by")
+  user      User      @relation(fields: [createdBy], references: [id])
 
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime? @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
 }
 
 enum TipoCategoria {
-    PRODUTO
-    DESPESA
+  PRODUTO
+  DESPESA
 }
 
 model Despesa {
@@ -62,19 +63,19 @@ model Despesa {
   createdBy      String     @map("created_by")
   user           User       @relation(fields: [createdBy], references: [id])  
 
-  createdAt DateTime  @default(now()) @map("created_at")       
-  updatedAt DateTime? @updatedAt      @map("updated_at")                                  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime? @updatedAt      @map("updated_at")
 }
 
 model User {
-  id           String       @id @default(cuid())
-  cpf          String       @unique @db.VarChar(20)
-  name         String       @db.VarChar(200)
-  username     String       @unique @db.VarChar(100) 
-  password     String       @db.VarChar(200)
-  email        String?      @db.VarChar(200)
-  phone        String?      @db.VarChar(20)
-  active       Boolean      @default(true)
+  id              String     @id @default(cuid())
+  cpf             String     @unique @db.VarChar(20)
+  name            String     @db.VarChar(200)
+  username        String     @unique @db.VarChar(100)
+  password        String     @db.VarChar(200)
+  email           String?    @db.VarChar(200)
+  phone           String?    @db.VarChar(20)
+  active          Boolean    @default(true)
 
   movimentacaoEstoque MovimentacaoEstoque[]
 
@@ -89,21 +90,65 @@ model User {
   produtos         Produto[]
   categorias       Categoria[]
   despesas         Despesa[]
-  formasPagamento  formasPagamento[]
+  formasPagamento  FormasPagamento[]
+  pedidos          Pedido[]
 }
 
-model formasPagamento {
-  id           String       @id @default(cuid())
-  name         String
-  status       Boolean      @default(true)
+model FormasPagamento {
+  id          String     @id @default(cuid())
+  name        String
+  status      Boolean    @default(true)
+
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime?  @updatedAt      @map("updated_at")
+
+  pedidos     Pedido[]
 
   createdBy    String       @map("created_by")
   user         User         @relation(fields: [createdBy], references: [id])
 
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime?    @updatedAt
-
   venda Venda[]
+}
+
+model Pedido {
+  id                 String           @id @default(cuid())
+  descricao          String
+  total              Decimal
+  categoria          String?
+  situacao           Boolean?
+  status             StatusPedido     @default(FINALIZADO)
+  dataPedido         DateTime         @default(now())
+  motivoCancelamento String?
+  dataCancelamento   DateTime?
+
+  usuarioId          String?          @map("usuario_id")
+  usuario            User?            @relation(fields: [usuarioId], references: [id])
+
+  formaPagamentoId   String?          @map("forma_pagamento_id")
+  formaPagamento     FormasPagamento? @relation(fields: [formaPagamentoId], references: [id])
+
+  itens              PedidoItem[]     // itens do pedido
+
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime?        @updatedAt      @map("updated_at")
+}
+
+model PedidoItem {
+  id             String   @id @default(cuid())
+  quantidade     Int
+  precoUnitario  Decimal
+  subtotal       Decimal
+
+  produtoId      String
+  produto        Produto @relation(fields: [produtoId], references: [id])
+
+  pedidoId       String
+  pedido         Pedido  @relation(fields: [pedidoId], references: [id])
+}
+
+enum StatusPedido {
+  FINALIZADO
+  CANCELADO
 }
 
 model Venda {
@@ -112,7 +157,7 @@ model Venda {
   valorTotalDesconto Decimal           @map("valor_total_desconto")
   valorLiquido       Decimal           @map("valor_liquido")
 
-  formaPagamento     formasPagamento   @relation(fields: [formaPagamentoId], references: [id])
+  formaPagamento     FormasPagamento   @relation(fields: [formaPagamentoId], references: [id])
   formaPagamentoId   String
 
   usuario            User              @relation(fields: [usuarioId], references: [id])
